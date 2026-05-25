@@ -1,0 +1,28 @@
+---
+description: Global project rules for ambiguity
+globs: *
+---
+# ambiguity — Project-wide rules
+
+## Identity
+Deterministic prompt analysis tool. Scores ambiguity (0-10) with zero LLM calls.
+
+## Dual implementation
+- **Python**: `src/ambiguity/` — Federation-facing
+- **TypeScript**: `ts/src/` — canonical npm dist
+- Both must stay in sync
+
+## Constraints
+- No LLM calls in analysis code
+- Federation UDL bridge is optional try/import
+- Levenshtein fuzzy matching at edit distance 1 only
+- Accessibility hardening: missing space, stutter, repeated char detection
+
+## Before submitting
+1. Run both test suites
+2. Verify CLI: `ambiguity analyze "test" --json`
+3. Keep implementations in sync
+
+## Key reference
+- `AGENTS.md` — full agent guide
+- `QUICKSTART.md` — install and usage

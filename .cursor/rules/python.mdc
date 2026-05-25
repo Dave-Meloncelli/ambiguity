@@ -1,0 +1,26 @@
+---
+description: Python implementation rules
+globs: src/ambiguity/**/*.py
+---
+# ambiguity — Python implementation
+
+## Location
+`src/ambiguity/` — Federation-facing Python package
+
+## Key files
+- `containers.py` — verb taxonomy + keyword map + acronym registry
+- `parser.py` — regex token extraction
+- `scoring.py` — ambiguity score (0-10) formula
+- `advisory.py` — priority-ordered advisory rules
+- `bridges.py` — UDL envelope (optional Federation import)
+
+## Testing
+```bash
+pytest tests/
+ambiguity analyze "test" --json
+```
+
+## Conventions
+- No LLM calls — all regex + dict + arithmetic
+- Federation bridge fails silently if C:\Federation unavailable
+- Match ts/src/ patterns exactly (same modules, same logic)

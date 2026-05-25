@@ -1,0 +1,25 @@
+---
+description: TypeScript implementation rules
+globs: ts/src/**/*.ts
+---
+# ambiguity — TypeScript implementation
+
+## Location
+`ts/src/` — canonical npm distribution (`ambiguity-analyzer`)
+
+## Key files
+- `containers.ts` — verb taxonomy + keyword map + acronym registry
+- `parser.ts` — regex token extraction
+- `scoring.ts` — ambiguity score (0-10) formula
+- `advisory.ts` — priority-ordered advisory rules
+- `bridges.ts` — UDL envelope schema and wrapper
+
+## Quality
+```bash
+cd ts && npm run quality  # biome lint + vitest + tsc --noEmit
+```
+
+## Conventions
+- No LLM calls — all regex + dict + arithmetic
+- Zod schemas for structured output (UDL envelope)
+- Mirror src/ambiguity/ patterns exactly

@@ -1,0 +1,70 @@
+{
+  "name": "ambiguity-analyzer",
+  "version": "0.1.0",
+  "description": "Deterministic prompt analysis — pre-flight linter for human-to-model translation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli.js",
+      "types": "./dist/cli.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "ambiguity": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --apply src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run build && npm run test",
+    "ci": "npm run typecheck && npm run lint && npm run test",
+    "quality": "npm run typecheck && npm run lint && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anomalyco/ambiguity-analyzer.git"
+  },
+  "homepage": "https://github.com/anomalyco/ambiguity-analyzer#readme",
+  "bugs": {
+    "url": "https://github.com/anomalyco/ambiguity-analyzer/issues"
+  },
+  "keywords": [
+    "prompt-engineering",
+    "prompt-linting",
+    "llm-guardrails",
+    "deterministic-analysis",
+    "pre-flight",
+    "entropy-scoring",
+    "human-to-model-translation",
+    "ambiguity",
+    "linter",
+    "prompt",
+    "llm",
+    "federation-surface",
+    "udl-envelope"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "@types/node": "^22.0.0",
+    "@biomejs/biome": "^1.9.0",
+    "zod": "^3.24.0"
+  },
+  "dependencies": {}
+}

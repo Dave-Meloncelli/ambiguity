@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# TypeScript
+node_modules/
+ts/dist/
+ts/*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Profile
+~/.ambiguity/
+.ambiguity/
+
+# Environment
+.env
+.env.*
+
+# Federation bridge (optional, local only)
+C:/

@@ -1,0 +1,24 @@
+You are working on ambiguity — a deterministic prompt analysis tool.
+
+## Key facts
+
+- Dual implementation: Python (`src/ambiguity/`) + TypeScript (`ts/src/`)
+- Both must stay in sync (same modules, same logic)
+- Zero LLM calls — all analysis is regex + dict + arithmetic
+- Federation UDL bridge is optional try/import
+
+## When editing
+
+1. Run tests after changes: `pytest tests/` (Python) or `cd ts && npm test` (TS)
+2. Keep both implementations in sync — if you add a verb to one taxonomy, add it to the other
+3. Check `AGENTS.md` for project conventions and handoff instructions
+4. Check `QUICKSTART.md` for install and usage patterns
+
+## Project files to know
+
+- `src/ambiguity/containers.py` — verb taxonomy (Python)
+- `ts/src/containers.ts` — verb taxonomy (TypeScript)
+- `src/ambiguity/scoring.py` — scoring formula
+- `ts/src/scoring.ts` — scoring formula (mirrors Python)
+- `src/ambiguity/parser.py` — token extraction logic
+- `AGENTS.md` — full agent guide

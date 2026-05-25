@@ -1,0 +1,76 @@
+version: 1
+name: ambiguity-analyzer
+purpose: Deterministic prompt analysis — pre-flight linter for human-to-model translation
+status: active
+
+package:
+  product_name: ambiguity
+  expanded_name: ambiguity-analyzer
+  release_class: public
+  posture: standalone
+  safety: deterministic
+  license: MIT
+
+files:
+  - README.md
+  - LICENSE
+  - AGENTS.md
+  - QUICKSTART.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - MANIFEST.yaml
+  - CHAP_ANCHOR.md
+  - opencode.json
+  - CLAUDE.md
+  - .cursorrules
+  - .windsurfrules
+  - CONVENTIONS.md
+  - .github/copilot-instructions.md
+  - .editorconfig
+  - .gitignore
+  - pyproject.toml
+  - ts/package.json
+
+implementations:
+  python:
+    path: src/ambiguity/
+    install: pip install -e .
+    test: pytest tests/
+    entry: python -m ambiguity
+  typescript:
+    path: ts/src/
+    install: cd ts && npm install
+    build: cd ts && npm run build
+    test: cd ts && npm test
+    entry: npx ambiguity
+
+surfaces:
+  opencode: opencode.json
+  claude_code: CLAUDE.md
+  cursor: .cursorrules
+  cursor_scoped:
+    - .cursor/rules/project.mdc
+    - .cursor/rules/python.mdc
+    - .cursor/rules/typescript.mdc
+  copilot: .github/copilot-instructions.md
+  copilot_scoped:
+    - .github/instructions/python.instructions.md
+    - .github/instructions/typescript.instructions.md
+  windsurf: .windsurfrules
+  aider: CONVENTIONS.md
+  cline: .clinerules
+  gemini: .gemini/GEMINI.md
+  grok: .grok/GROK.md
+  agent_guide: AGENTS.md
+  quickstart: QUICKSTART.md
+  changelog: CHANGELOG.md
+  contributing: CONTRIBUTING.md
+  chap_anchor: CHAP_ANCHOR.md
+  manifest: MANIFEST.yaml
+
+ecosystem:
+  federation_registration: "C:\\Federation\\federation\\registry\\CHAP_AMBIGUITY_ANALYZER_ENTRY_20260525.md"
+  retained_surfaces: "C:\\Federation\\federation\\registry\\RETAINED_SURFACES_CANON.json"
+  registry_key: "ambiguity_analyzer"
+  udl_bridge: "src/ambiguity/bridges.py"
