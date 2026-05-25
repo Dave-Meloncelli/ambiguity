@@ -58,9 +58,23 @@ reveal missing verbs and false-positive container mappings.
 - New: `.clinerules` — Cline / Roo
 - New: `.cursor/rules/python.mdc`, `typescript.mdc`, `project.mdc` — scoped Cursor rules
 - New: `.github/instructions/python.instructions.md`, `typescript.instructions.md` — scoped Copilot instructions
-- Updated: `AGENTS.md` now includes full surface inventory table
+- Updated: `docs/AGENTS.md` now includes full surface inventory table
 - Updated: `MANIFEST.yaml` now lists all surfaces including scoped variant
 - Web research confirmed current agent standards landscape (Codex CLI uses AGENTS.md, Gemini uses GEMINI.md, Grok TUI uses GROK.md, Cline uses .clinerules)
+
+### v0.3 — 2026-05-25 (root restructuring)
+
+**Project root reorganized from 30→22 visible items:**
+
+| Action | Detail |
+|--------|--------|
+| 🗑️ Deleted | `.cursorrules` (legacy, content in `.cursor/rules/`) |
+| 📦 Migrated | `.windsurfrules` → `.windsurf/rules/rules.md` (modern scoped format) |
+| 📦 Migrated | `.clinerules` (file) → `.clinerules/rules.md` (directory format) |
+| 📄 Moved to `docs/` | AGENTS.md, QUICKSTART.md, CHANGELOG.md, CHAP_ANCHOR.md, memory.md |
+| 🔄 Updated | All 12 surface/cross-reference files with corrected paths |
+
+**Root now:** 10 dirs + 12 flat files. Flat clutter nearly halved. All agent surfaces use modern directory-based formats where available.
 
 ### Known issues
 

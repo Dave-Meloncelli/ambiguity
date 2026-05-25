@@ -21,8 +21,8 @@ ambiguity analyze "test" --json  # CLI smoke test
 ```
 
 ## Key reference files
-- `AGENTS.md` — full project conventions and handoff
-- `QUICKSTART.md` — install and usage walkthrough
+- `docs/AGENTS.md` — full project conventions and handoff
+- `docs/QUICKSTART.md` — install and usage walkthrough
 - `src/ambiguity/containers.py` / `ts/src/containers.ts` — verb taxonomy
 - `src/ambiguity/advisory.py` / `ts/src/advisory.ts` — advisory rules
-- `memory.md` — session history and open decisions
+- `docs/memory.md` — session history and open decisions

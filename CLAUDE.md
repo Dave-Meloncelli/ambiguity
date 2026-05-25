@@ -21,7 +21,7 @@ ambiguity analyze "your prompt here"
 
 | File | Purpose |
 |------|---------|
-| `AGENTS.md` | Full agent guide with structure, conventions, handoff |
+| `docs/AGENTS.md` | Full agent guide with structure, conventions, handoff |
 | `src/ambiguity/containers.py` | Verb taxonomy + keyword map |
 | `ts/src/containers.ts` | TypeScript verb taxonomy (mirrors Python) |
 | `src/ambiguity/scoring.py` | Ambiguity score (0-10) formula |

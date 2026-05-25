@@ -18,4 +18,4 @@ You are working on ambiguity: a deterministic prompt analysis tool.
 3. Update both implementations if adding verbs, keywords, or advisory rules
 
 ## Key reference
-AGENTS.md has full project conventions and handoff instructions.
+docs/AGENTS.md has full project conventions and handoff instructions.

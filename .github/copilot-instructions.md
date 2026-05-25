@@ -16,7 +16,7 @@ they reach an LLM. Zero LLM calls — all regex + dict + arithmetic.
 - `src/ambiguity/containers.py` / `ts/src/containers.ts` — verb taxonomy + keyword map
 - `src/ambiguity/parser.py` / `ts/src/parser.ts` — regex extraction
 - `src/ambiguity/scoring.py` / `ts/src/scoring.ts` — ambiguity score formula
-- `AGENTS.md` — full agent guide with conventions
+- `docs/AGENTS.md` — full agent guide with conventions
 
 ## Commands
 

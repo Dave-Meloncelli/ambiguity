@@ -3,7 +3,7 @@
   "name": "ambiguity-analyzer",
   "description": "Deterministic prompt analysis — pre-flight linter for human-to-model translation",
   "version": "0.1.0",
-  "instructions": ["AGENTS.md", "QUICKSTART.md"],
+  "instructions": ["docs/AGENTS.md", "docs/QUICKSTART.md"],
   "model": {
     "provider": "auto",
     "reasoning": true

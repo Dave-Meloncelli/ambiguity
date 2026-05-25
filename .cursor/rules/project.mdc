@@ -24,5 +24,5 @@ Deterministic prompt analysis tool. Scores ambiguity (0-10) with zero LLM calls.
 3. Keep implementations in sync
 
 ## Key reference
-- `AGENTS.md` — full agent guide
-- `QUICKSTART.md` — install and usage
+- `docs/AGENTS.md` — full agent guide
+- `docs/QUICKSTART.md` — install and usage

@@ -17,8 +17,8 @@ You are working on ambiguity — a deterministic prompt analysis tool.
 - CLI: `ambiguity analyze "test" --json`
 
 ## Reference files
-- AGENTS.md — full guide with conventions and handoff
-- QUICKSTART.md — install and usage
-- src/ambiguity/containers.py — verb taxonomy (Python)
-- ts/src/containers.ts — verb taxonomy (TypeScript)
-- memory.md — session history and open decisions
+- `docs/AGENTS.md` — full guide with conventions and handoff
+- `docs/QUICKSTART.md` — install and usage
+- `src/ambiguity/containers.py` — verb taxonomy (Python)
+- `ts/src/containers.ts` — verb taxonomy (TypeScript)
+- `docs/memory.md` — session history and open decisions

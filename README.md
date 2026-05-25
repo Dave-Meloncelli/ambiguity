@@ -101,11 +101,11 @@ MIT — see [LICENSE](LICENSE)
 |------|---------------|
 | `opencode.json` | opencode (canonical entry) |
 | `CLAUDE.md` | Claude Code |
-| `.cursorrules` | Cursor IDE |
+| `.cursor/rules/` | Cursor IDE (scoped rules) |
 | `.github/copilot-instructions.md` | GitHub Copilot |
-| `.windsurfrules` | Windsurf (Codeium) |
+| `.windsurf/rules/` | Windsurf (Codeium) |
 | `CONVENTIONS.md` | Aider |
-| `AGENTS.md` | Agent guide with conventions |
-| `QUICKSTART.md` | Human + agent walkthrough |
+| `docs/AGENTS.md` | Agent guide with conventions |
+| `docs/QUICKSTART.md` | Human + agent walkthrough |
 | `MANIFEST.yaml` | Ecosystem manifest |
-| `CHAP_ANCHOR.md` | Federation surface anchor |
+| `docs/CHAP_ANCHOR.md` | Federation surface anchor |

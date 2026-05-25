@@ -11,8 +11,8 @@ Deterministic prompt analysis tool. Scores human-to-model prompts for ambiguity 
 ## Key files
 | File | Purpose |
 |------|---------|
-| `AGENTS.md` | Full agent guide with conventions and handoff |
-| `QUICKSTART.md` | Install, usage, learning commands |
+| `docs/AGENTS.md` | Full agent guide with conventions and handoff |
+| `docs/QUICKSTART.md` | Install, usage, learning commands |
 | `src/ambiguity/containers.py` | Verb taxonomy + keyword map (Python) |
 | `ts/src/containers.ts` | Verb taxonomy + keyword map (TypeScript) |
 | `src/ambiguity/scoring.py` | Ambiguity score formula (Python) |

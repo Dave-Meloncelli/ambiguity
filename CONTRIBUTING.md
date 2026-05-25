@@ -39,4 +39,4 @@ npm run quality   # typecheck + lint + test
 - `src/ambiguity/scoring.py` + `ts/src/scoring.ts` — ambiguity score formula
 - `src/ambiguity/advisory.py` + `ts/src/advisory.ts` — priority-ordered advisories
 - `src/ambiguity/bridges.py` + `ts/src/bridges.ts` — UDL envelope (Federation bridge)
-- `AGENTS.md` — full project conventions and handoff instructions
+- `docs/AGENTS.md` — full project conventions and handoff instructions

@@ -14,19 +14,17 @@ package:
 files:
   - README.md
   - LICENSE
-  - AGENTS.md
-  - QUICKSTART.md
-  - CHANGELOG.md
+  - docs/AGENTS.md
+  - docs/QUICKSTART.md
+  - docs/CHANGELOG.md
+  - docs/CHAP_ANCHOR.md
+  - docs/memory.md
   - CONTRIBUTING.md
   - SECURITY.md
   - MANIFEST.yaml
-  - CHAP_ANCHOR.md
   - opencode.json
   - CLAUDE.md
-  - .cursorrules
-  - .windsurfrules
   - CONVENTIONS.md
-  - .github/copilot-instructions.md
   - .editorconfig
   - .gitignore
   - pyproject.toml
@@ -48,25 +46,21 @@ implementations:
 surfaces:
   opencode: opencode.json
   claude_code: CLAUDE.md
-  cursor: .cursorrules
-  cursor_scoped:
-    - .cursor/rules/project.mdc
-    - .cursor/rules/python.mdc
-    - .cursor/rules/typescript.mdc
+  cursor: .cursor/rules/
   copilot: .github/copilot-instructions.md
   copilot_scoped:
     - .github/instructions/python.instructions.md
     - .github/instructions/typescript.instructions.md
-  windsurf: .windsurfrules
+  windsurf: .windsurf/rules/
   aider: CONVENTIONS.md
-  cline: .clinerules
+  cline: .clinerules/
   gemini: .gemini/GEMINI.md
   grok: .grok/GROK.md
-  agent_guide: AGENTS.md
-  quickstart: QUICKSTART.md
-  changelog: CHANGELOG.md
+  agent_guide: docs/AGENTS.md
+  quickstart: docs/QUICKSTART.md
+  changelog: docs/CHANGELOG.md
   contributing: CONTRIBUTING.md
-  chap_anchor: CHAP_ANCHOR.md
+  chap_anchor: docs/CHAP_ANCHOR.md
   manifest: MANIFEST.yaml
 
 ecosystem:

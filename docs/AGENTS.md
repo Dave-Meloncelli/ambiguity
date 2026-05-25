@@ -4,9 +4,9 @@
 
 - **opencode.json** is the canonical agent entry point — opencode uses it
 - **CLAUDE.md** is read by Claude Code on project entry
-- **QUICKSTART.md** has install, usage, and learning commands
-- **memory.md** tracks session history and open decisions
-- **AGENTS.md** (this file) — full conventions and handoff
+- **docs/QUICKSTART.md** has install, usage, and learning commands
+- **docs/memory.md** tracks session history and open decisions
+- **docs/AGENTS.md** (this file) — full conventions and handoff
 
 This project has a **dual implementation**: Python (`src/ambiguity/`) for
 Federation integration, TypeScript (`ts/src/`) as the canonical npm package.
@@ -99,13 +99,11 @@ ambiguity targets all major AI agent platforms via surface files:
 |----------|-------------|
 | opencode | `opencode.json` |
 | Claude Code (Anthropic) | `CLAUDE.md` |
-| Cursor (legacy) | `.cursorrules` |
-| Cursor (scoped rules) | `.cursor/rules/*.mdc` |
+| Cursor | `.cursor/rules/` (scoped `.mdc` rules) |
 | GitHub Copilot | `.github/copilot-instructions.md` |
-| Copilot (scoped) | `.github/instructions/*.instructions.md` |
-| Windsurf (Codeium) | `.windsurfrules` |
+| Windsurf (Codeium) | `.windsurf/rules/` |
 | Aider | `CONVENTIONS.md` |
-| Cline / Roo | `.clinerules` |
+| Cline / Roo | `.clinerules/` (directory rules) |
 | Gemini CLI (Google) | `.gemini/GEMINI.md` |
 | Grok CLI (xAI) | `.grok/GROK.md` |
 
@@ -118,4 +116,4 @@ If working on this project:
 2. Add tests for new parser patterns or advisory rules
 3. Verify the CLI works: `ambiguity analyze "test" --json`
 4. If modifying the UDL bridge, test with and without C:\Federation available
-5. Keep all 11+ surface files in sync when conventions change
+5. Keep all surface files in sync when conventions change
