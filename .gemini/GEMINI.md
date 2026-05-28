@@ -31,6 +31,13 @@ ambiguity analyze "test prompt"
 cd ts && npm install && npm run quality
 ```
 
+## Pre-flight hook
+Before processing any user request:
+1. `echo "<request>" | ambiguity analyze --pipe --json` → parse score, band, issues
+2. **score > 8.0**: refuse, explain ambiguity issues, request restructuring
+3. **score > 6.0**: flag specific issues, ask for clarification
+4. **score <= 6.0**: proceed, noting any advisories
+
 ## Conventions
 - Deterministic only — no LLM calls in analysis code
 - No external runtime dependencies (Federation UDL bridge is optional try/import)

@@ -28,6 +28,33 @@ CONTAINERS: dict[str, Container] = {
     "constraint": Container("constraint", "Boundary or limitation on scope", 0.9),
 }
 
+VOCABULARY_SCOPE: dict[str, dict[str, str]] = {
+    "surface anchor": {"domain": "ecosystem"},
+    "capability packet": {"domain": "ecosystem"},
+    "proof condition": {"domain": "ecosystem"},
+    "retained surfaces": {"domain": "ecosystem"},
+    "udl envelope": {"domain": "ecosystem"},
+    "chap surface": {"domain": "ecosystem"},
+    "fleshuit": {"domain": "ecosystem"},
+    "aruss": {"domain": "ecosystem"},
+    "laminar": {"domain": "ecosystem"},
+    "canonical": {"domain": "technical"},
+    "envelope": {"domain": "metaphor"},
+    "surface": {"domain": "metaphor"},
+    "bridge": {"domain": "metaphor"},
+    "anchor": {"domain": "metaphor"},
+    "taxonomy": {"domain": "technical"},
+    "specificity": {"domain": "technical"},
+    "deterministic": {"domain": "technical"},
+    "heuristic": {"domain": "technical"},
+    "entropy": {"domain": "technical"},
+    "empirical": {"domain": "technical"},
+    "methodology": {"domain": "technical"},
+    "paradigm": {"domain": "technical"},
+    "orthogonal": {"domain": "technical"},
+    "idempotent": {"domain": "technical"},
+}
+
 KNOWN_ACRONYMS: dict[str, str] = {
     "UDL": "Unified Data Layer",
     "CHAP": "Cross-Harness Alignment Protocol",
@@ -209,11 +236,126 @@ def specificity_band(score: float) -> str:
     return "precise"
 
 
+def _generate_inflections(verb: str) -> list[str]:
+    forms = []
+    # -s form (third person singular)
+    if verb.endswith(("s", "sh", "ch", "x", "o", "z")):
+        forms.append(verb + "es")
+    elif verb.endswith("y") and len(verb) > 1 and verb[-2] not in "aeiou":
+        forms.append(verb[:-1] + "ies")
+    else:
+        forms.append(verb + "s")
+    # -ed form (past tense)
+    if verb.endswith("e"):
+        forms.append(verb + "d")
+    elif verb.endswith("y") and len(verb) > 1 and verb[-2] not in "aeiou":
+        forms.append(verb[:-1] + "ied")
+    elif len(verb) > 2 and verb[-1] not in "aeiouwyx" and verb[-2] in "aeiou" and verb[-3] not in "aeiou":
+        forms.append(verb + verb[-1] + "ed")
+    else:
+        forms.append(verb + "ed")
+    # -ing form (present participle)
+    if verb.endswith("ie"):
+        forms.append(verb[:-2] + "ying")
+    elif verb.endswith("e") and not verb.endswith("ee"):
+        forms.append(verb[:-1] + "ing")
+    elif len(verb) > 2 and verb[-1] not in "aeiouwyx" and verb[-2] in "aeiou" and verb[-3] not in "aeiou":
+        forms.append(verb + verb[-1] + "ing")
+    else:
+        forms.append(verb + "ing")
+    return forms
+
+
+def _build_stemming_table() -> dict[str, str]:
+    table: dict[str, str] = {}
+    for verb in VERB_TAXONOMY:
+        for form in _generate_inflections(verb):
+            table[form] = verb
+    IRREGULAR_FORMS: dict[str, str] = {
+        "wrote": "write", "written": "write", "writing": "write",
+        "thought": "think", "thinking": "think",
+        "dealt": "deal", "dealing": "deal",
+        "built": "build", "building": "build",
+        "began": "begin", "begun": "begin", "beginning": "begin",
+        "broke": "break", "broken": "break", "breaking": "break",
+        "brought": "bring", "bringing": "bring",
+        "bought": "buy", "buying": "buy",
+        "chose": "choose", "chosen": "choose", "choosing": "choose",
+        "came": "come", "coming": "come",
+        "drew": "draw", "drawn": "draw", "drawing": "draw",
+        "drove": "drive", "driven": "drive", "driving": "drive",
+        "ate": "eat", "eaten": "eat", "eating": "eat",
+        "fell": "fall", "fallen": "fall", "falling": "fall",
+        "flew": "fly", "flown": "fly", "flying": "fly",
+        "forgot": "forget", "forgotten": "forget", "forgetting": "forget",
+        "gave": "give", "given": "give", "giving": "give",
+        "grew": "grow", "grown": "grow", "growing": "grow",
+        "hid": "hide", "hidden": "hide", "hiding": "hide",
+        "kept": "keep", "keeping": "keep",
+        "knew": "know", "known": "know", "knowing": "know",
+        "led": "lead", "leading": "lead",
+        "left": "leave", "leaving": "leave",
+        "lost": "lose", "losing": "lose",
+        "made": "make", "making": "make",
+        "meant": "mean", "meaning": "mean",
+        "met": "meet", "meeting": "meet",
+        "paid": "pay", "paying": "pay",
+        "put": "put", "putting": "put",
+        "ran": "run", "running": "run",
+        "said": "say", "saying": "say",
+        "saw": "see", "seen": "see", "seeing": "see",
+        "sent": "send", "sending": "send",
+        "set": "set", "setting": "set",
+        "spoke": "speak", "spoken": "speak", "speaking": "speak",
+        "spent": "spend", "spending": "spend",
+        "stood": "stand", "standing": "stand",
+        "took": "take", "taken": "take", "taking": "take",
+        "taught": "teach", "teaching": "teach",
+        "told": "tell", "telling": "tell",
+        "understood": "understand", "understanding": "understand",
+        "went": "go", "gone": "go", "going": "go",
+        "won": "win", "winning": "win",
+        "implementation": "implement",
+        "implementations": "implement",
+        "configuration": "configure",
+        "configurations": "configure",
+        "deployment": "deploy",
+        "deployments": "deploy",
+        "integration": "integrate",
+        "integrations": "integrate",
+        "migration": "migrate",
+        "migrations": "migrate",
+        "optimization": "optimize",
+        "optimizations": "optimize",
+        "validation": "validate",
+        "validations": "validate",
+        "verification": "verify",
+        "verifications": "verify",
+        "documentation": "document",
+        "summarization": "summarize",
+        "refactoring": "refactor",
+        "refactored": "refactor",
+    }
+    for form, base in IRREGULAR_FORMS.items():
+        if form not in table:
+            table[form] = base
+    return table
+
+
+STEMMING_TABLE = _build_stemming_table()
+
+
 def containers_for_verb(verb: str) -> tuple[list[str], float]:
     verb_lower = verb.lower()
     entry = VERB_TAXONOMY.get(verb_lower)
     if entry:
         return entry["containers"], entry["specificity"]
+    # Check stemming table
+    stem = STEMMING_TABLE.get(verb_lower)
+    if stem:
+        entry = VERB_TAXONOMY.get(stem)
+        if entry:
+            return entry["containers"], entry["specificity"]
     return [], 0.0
 
 
@@ -316,7 +458,8 @@ FUZZY_IGNORE: set[str] = {
     "still", "yet", "already", "quite", "rather", "pretty",
     "might", "must", "shall", "should", "could", "would", "may", "can",
     "say", "says", "said", "want", "need", "like", "love", "hate",
-    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "not", "dual", "watch",
 }
 
 
@@ -340,16 +483,18 @@ def levenshtein_distance(a: str, b: str) -> int:
 
 def fuzzy_verb_match(word: str) -> dict | None:
     lower = word.lower()
-    if lower in FUZZY_IGNORE:
-        return None
     if lower in VERB_TAXONOMY:
         return {"verb": lower, "distance": 0}
+    if lower in STEMMING_TABLE:
+        return {"verb": STEMMING_TABLE[lower], "distance": 1}
+    if lower in FUZZY_IGNORE:
+        return None
     best = None
     for known in VERB_TAXONOMY:
         d = levenshtein_distance(lower, known)
         if d == 0:
             return {"verb": known, "distance": 0}
-        max_dist = 1  # distance 2 produces too many false positives from common nouns
+        max_dist = 1
         if d <= max_dist:
             if best is None or d < best["distance"]:
                 best = {"verb": known, "distance": d}

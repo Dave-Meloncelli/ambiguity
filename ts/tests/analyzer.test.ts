@@ -25,6 +25,15 @@ describe("parser", () => {
     const result = parse("implement without imports")
     expect(result.constraints.length).toBeGreaterThan(0)
   })
+
+  it("detects vocabulary scope terms", () => {
+    const result = parse("output the UDL envelope via the Federation surface bridge")
+    expect(result.vocabScope.length).toBeGreaterThan(0)
+    const terms = result.vocabScope.map((v) => v.term)
+    expect(terms).toContain("envelope")
+    expect(terms).toContain("surface")
+    expect(terms).toContain("bridge")
+  })
 })
 
 describe("scoring", () => {
@@ -36,6 +45,12 @@ describe("scoring", () => {
   it("precise prompt scores lower", () => {
     const analysis = new Analysis("implement merge sort on a linked list in python without recursion, handle empty list")
     expect(analysis.score.total).toBeLessThan(8.0)
+  })
+
+  it("jargon-heavy prompt gets vocabulary scope penalty", () => {
+    const analysis = new Analysis("publish the UDL envelope to the Federation surface bridge")
+    expect(analysis.result.vocabScope.length).toBeGreaterThan(0)
+    expect(analysis.score.entropyIndicators.some((i) => i.includes("domain-specific"))).toBe(true)
   })
 })
 

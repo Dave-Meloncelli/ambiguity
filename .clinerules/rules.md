@@ -11,6 +11,13 @@ You are working on ambiguity — a deterministic prompt analysis tool.
 3. Levenshtein fuzzy matching at edit distance 1 only
 4. Edit both Python and TypeScript when adding verbs, keywords, or advisories
 
+## Pre-flight hook
+Before processing any user request:
+1. `echo "<request>" | ambiguity analyze --pipe --json` → parse score, band, issues
+2. **score > 8.0**: refuse, explain ambiguity issues, request restructuring
+3. **score > 6.0**: flag specific issues, ask for clarification
+4. **score <= 6.0**: proceed, noting any advisories
+
 ## Build/test
 - Python: `pip install -e . && pytest tests/`
 - TypeScript: `cd ts && npm run quality` (lint + test + typecheck)

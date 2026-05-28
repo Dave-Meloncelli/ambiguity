@@ -4,13 +4,16 @@ import {
   KEYWORD_MAP,
   KNOWN_ACRONYMS,
   SPELLING_CORRECTIONS,
+  STEMMING_TABLE,
   VERB_TAXONOMY,
+  VOCABULARY_SCOPE,
   fuzzyVerbMatch,
   levenshteinDistance,
 } from "./containers.js"
 
 // augment COMMON_WORDS with all known verbs and keywords for better space-split detection
-const VERB_SET = new Set(Object.keys(VERB_TAXONOMY))
+const ALL_VERB_KEYS = Object.keys(VERB_TAXONOMY).concat(Object.keys(STEMMING_TABLE)).sort((a, b) => b.length - a.length)
+const VERB_SET = new Set(ALL_VERB_KEYS)
 const KEYWORD_SET = new Set(Object.keys(KEYWORD_MAP))
 
 export interface FuzzyMatch {
@@ -29,6 +32,11 @@ export interface MissingSpace {
   split: [string, string]
 }
 
+export interface VocabScopeTerm {
+  term: string
+  domain: "ecosystem" | "technical" | "metaphor"
+}
+
 export interface ParseResult {
   text: string
   verbs: string[]
@@ -37,6 +45,7 @@ export interface ParseResult {
   constraints: string[]
   acronyms: [string, string][]
   unqualifiedRefs: string[]
+  vocabScope: VocabScopeTerm[]
   typoWords: FuzzyMatch[]
   stutterWords: StutterPair[]
   missingSpaces: MissingSpace[]
@@ -47,7 +56,7 @@ export interface ParseResult {
   instructionCount: number
 }
 
-const VERB_PATTERN = new RegExp(`\\b(${Object.keys(VERB_TAXONOMY).join("|")})\\b`, "gi")
+const VERB_PATTERN = new RegExp(`\\b(${ALL_VERB_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "gi")
 
 const CONSTRAINT_PATTERNS: [RegExp, string][] = [
   [/\b(only|exactly|specifically|strictly)\b/i, "exact"],
@@ -63,6 +72,8 @@ const UNQUALIFIED_PATTERNS = [
   /\bthe (thing|file|solution)\b/i,
   /\bit\b/i,
   /\b(as we discussed|as i said|as mentioned|as we know)\b/i,
+  /\b(this|these)\b/i,
+  /\bthe (system|application|platform|framework|service|module|component|solution)\b/i,
 ]
 
 const SENTENCE_SPLIT = /[.!?]+/
@@ -361,6 +372,18 @@ export function parse(text: string): ParseResult {
     }
   }
 
+  const vocabScope: VocabScopeTerm[] = []
+  const vsSeen = new Set<string>()
+  for (const [term, entry] of Object.entries(VOCABULARY_SCOPE)) {
+    if (vsSeen.has(term)) continue
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const pattern = new RegExp(`\\b${escaped}\\b`, "i")
+    if (pattern.test(text)) {
+      vsSeen.add(term)
+      vocabScope.push({ term, domain: entry.domain })
+    }
+  }
+
   const unqualifiedRefs: string[] = []
   for (const pattern of UNQUALIFIED_PATTERNS) {
     const matches = text.match(pattern)
@@ -399,6 +422,7 @@ export function parse(text: string): ParseResult {
     constraints,
     acronyms,
     unqualifiedRefs,
+    vocabScope,
     typoWords,
     stutterWords,
     missingSpaces,

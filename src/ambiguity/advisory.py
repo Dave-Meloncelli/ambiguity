@@ -41,38 +41,43 @@ def advisory(result: ParseResult, score: AmbiguityScore) -> str | None:
         a, e = result.acronyms[0]
         candidates.append((5, "acronym", f"expand '{a}' to '{e}' on first use for consistent reception"))
 
-    # priority 6: multiple instructions
-    if result.instruction_count > 3 and "multi_instruction" not in _SUPPRESSED:
-        candidates.append((6, "multi_instruction", f"split into separate turns - {result.instruction_count} instructions overload reception"))
+    # priority 6: vocabulary scope
+    if result.vocab_scope and "vocab_scope" not in _SUPPRESSED:
+        vt = result.vocab_scope[0]
+        candidates.append((6, "vocab_scope", f"define domain term '{vt.term}' before use — not all readers share your vocabulary"))
 
-    # priority 7: unqualified references
+    # priority 7: multiple instructions
+    if result.instruction_count > 3 and "multi_instruction" not in _SUPPRESSED:
+        candidates.append((7, "multi_instruction", f"split into separate turns - {result.instruction_count} instructions overload reception"))
+
+    # priority 8: unqualified references
     if result.unqualified_refs and "unqualified_ref" not in _SUPPRESSED:
         ref = result.unqualified_refs[0]
-        candidates.append((7, "unqualified_ref", f"replace '{ref}' with a concrete reference"))
+        candidates.append((8, "unqualified_ref", f"replace '{ref}' with a concrete reference"))
 
-    # priority 8: typo words (spelling corrections)
+    # priority 9: typo words (spelling corrections)
     if result.typo_words and "typo" not in _SUPPRESSED:
         tw = result.typo_words[0]
-        candidates.append((8, "typo", f"'{tw.original}' looks like '{tw.corrected}' — no worries, just flagging in case"))
+        candidates.append((9, "typo", f"'{tw.original}' looks like '{tw.corrected}' — no worries, just flagging in case"))
 
-    # priority 9: no terminal punctuation
+    # priority 10: no terminal punctuation
     if not result.has_terminal_punctuation and result.word_count > 3 and "no_terminal_punct" not in _SUPPRESSED:
-        candidates.append((9, "no_terminal_punct", "add a period or question mark at the end to signal completeness"))
+        candidates.append((10, "no_terminal_punct", "add a period or question mark at the end to signal completeness"))
 
-    # priority 10: missing space
+    # priority 11: missing space
     if result.missing_spaces and "missing_space" not in _SUPPRESSED:
         ms = result.missing_spaces[0]
-        candidates.append((10, "missing_space", f"'{ms.combined}' might be two words: '{ms.split[0]} {ms.split[1]}'"))
+        candidates.append((11, "missing_space", f"'{ms.combined}' might be two words: '{ms.split[0]} {ms.split[1]}'"))
 
-    # priority 11: stutter / repeated words
+    # priority 12: stutter / repeated words
     if result.stutter_words and "stutter" not in _SUPPRESSED:
         sw = result.stutter_words[0]
-        candidates.append((11, "stutter", f"'{sw.word}' repeated {sw.occurrences}x — likely a typo"))
+        candidates.append((12, "stutter", f"'{sw.word}' repeated {sw.occurrences}x — likely a typo"))
 
-    # priority 12: repeated characters
+    # priority 13: repeated characters
     if result.repeated_chars and "repeated_char" not in _SUPPRESSED:
         rc = result.repeated_chars[0]
-        candidates.append((12, "repeated_char", f"'{rc}' has characters repeated 3+ times"))
+        candidates.append((13, "repeated_char", f"'{rc}' has characters repeated 3+ times"))
 
     if not candidates:
         return None

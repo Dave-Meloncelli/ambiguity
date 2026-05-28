@@ -52,9 +52,22 @@ export function advisory(result: ParseResult, score: AmbiguityScore): string | n
     candidates.push([5, "acronym", `expand '${a}' to '${e}' on first use for consistent reception`])
   }
 
-  if (result.instructionCount > 3 && !_suppressed.has("multi_instruction")) {
+  if (result.vocabScope.length > 0 && !_suppressed.has("vocab_scope")) {
+    const vs = result.vocabScope
+      .slice(0, 3)
+      .map((v) => `'${v.term}'`)
+      .join(", ")
+    const extra = result.vocabScope.length > 3 ? ` and ${result.vocabScope.length - 3} more` : ""
     candidates.push([
       6,
+      "vocab_scope",
+      `define domain terms before use: ${vs}${extra} may be ambiguous to unfamiliar readers`,
+    ])
+  }
+
+  if (result.instructionCount > 3 && !_suppressed.has("multi_instruction")) {
+    candidates.push([
+      7,
       "multi_instruction",
       `split into separate turns - ${result.instructionCount} instructions overload reception`,
     ])
@@ -62,13 +75,13 @@ export function advisory(result: ParseResult, score: AmbiguityScore): string | n
 
   if (result.unqualifiedRefs.length > 0 && !_suppressed.has("unqualified_ref")) {
     const ref = result.unqualifiedRefs[0]
-    candidates.push([7, "unqualified_ref", `replace '${ref}' with a concrete reference`])
+    candidates.push([8, "unqualified_ref", `replace '${ref}' with a concrete reference`])
   }
 
   if (result.typoWords.length > 0 && !_suppressed.has("typo")) {
     const tw = result.typoWords[0]
     candidates.push([
-      8,
+      9,
       "typo",
       `'${tw.original}' looks like '${tw.corrected}' — no worries, just flagging in case`,
     ])
@@ -80,7 +93,7 @@ export function advisory(result: ParseResult, score: AmbiguityScore): string | n
     !_suppressed.has("no_terminal_punct")
   ) {
     candidates.push([
-      9,
+      10,
       "no_terminal_punct",
       "add a period or question mark at the end to signal completeness",
     ])
@@ -89,7 +102,7 @@ export function advisory(result: ParseResult, score: AmbiguityScore): string | n
   if (result.missingSpaces.length > 0 && !_suppressed.has("missing_space")) {
     const ms = result.missingSpaces[0]
     candidates.push([
-      10,
+      11,
       "missing_space",
       `'${ms.combined}' might be two words: '${ms.split[0]} ${ms.split[1]}'`,
     ])
@@ -97,12 +110,12 @@ export function advisory(result: ParseResult, score: AmbiguityScore): string | n
 
   if (result.stutterWords.length > 0 && !_suppressed.has("stutter")) {
     const sw = result.stutterWords[0]
-    candidates.push([11, "stutter", `'${sw.word}' repeated ${sw.occurrences}x — likely a typo`])
+    candidates.push([12, "stutter", `'${sw.word}' repeated ${sw.occurrences}x — likely a typo`])
   }
 
   if (result.repeatedChars.length > 0 && !_suppressed.has("repeated_char")) {
     const rc = result.repeatedChars[0]
-    candidates.push([12, "repeated_char", `'${rc}' has characters repeated 3+ times`])
+    candidates.push([13, "repeated_char", `'${rc}' has characters repeated 3+ times`])
   }
 
   if (candidates.length === 0) return null

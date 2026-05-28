@@ -19,14 +19,14 @@ class AmbiguityScore:
     total: float
     band: str
 
-    def __init__(self, result: ParseResult):
+    def __init__(self, result: ParseResult, rhetoric=None, chunking=None):
         self.verb_specificity = _verb_specificity(result.verbs)
         self.container_overlap = _container_overlap(result.verbs, result.keywords)
-        self.entropy_indicators = _entropy_indicators(result)
+        self.entropy_indicators = _entropy_indicators(result, rhetoric=rhetoric, chunking=chunking)
         self.unqualified_refs = len(result.unqualified_refs)
         self.constraint_count = len(result.constraints)
         self.instruction_density = _instruction_density(result)
-        self.total = _total_score(self)
+        self.total = _total_score(self, result, rhetoric=rhetoric, chunking=chunking)
         self.band = _band(self.total)
 
     def __repr__(self) -> str:
@@ -56,7 +56,7 @@ def _container_overlap(verbs: list[str], keywords: list[str]) -> int:
     return len(all_containers)
 
 
-def _entropy_indicators(result: ParseResult) -> list[str]:
+def _entropy_indicators(result: ParseResult, rhetoric=None, chunking=None) -> list[str]:
     indicators = []
     if result.instruction_count > 3:
         indicators.append(f"{result.instruction_count} instructions in one prompt")
@@ -73,6 +73,18 @@ def _entropy_indicators(result: ParseResult) -> list[str]:
     if result.acronyms:
         acronyms_str = ", ".join(a for a, _ in result.acronyms)
         indicators.append(f"acronyms (expand: {acronyms_str})")
+    if result.vocab_scope:
+        terms_str = ", ".join(f"{vt.term} ({vt.domain})" for vt in result.vocab_scope[:5])
+        indicators.append(f"domain-specific vocabulary used without definition: {terms_str}")
+
+    # Rhetoric indicators
+    if rhetoric:
+        indicators.extend(rhetoric.rhetoric_indicators)
+
+    # Chunking indicators
+    if chunking:
+        indicators.extend(chunking.clause_indicators)
+
     return indicators
 
 
@@ -82,13 +94,22 @@ def _instruction_density(result: ParseResult) -> float:
     return result.instruction_count / (result.word_count / 10)
 
 
-def _total_score(score: AmbiguityScore) -> float:
+def _total_score(score: AmbiguityScore, result: ParseResult, rhetoric=None, chunking=None) -> float:
     base = 5.0
     base -= score.verb_specificity * 2.0
     base += min(score.container_overlap * 0.5, 2.0)
     base += len(score.entropy_indicators) * 0.5
     base += score.unqualified_refs * 0.5
     base -= min(score.constraint_count * 0.5, 2.0)
+    base += min(len(result.vocab_scope) * 0.3, 1.5)
+
+    if rhetoric:
+        base += rhetoric.rhetoric_penalty
+    if chunking and chunking.has_contradictions:
+        base += 0.5
+    if chunking and chunking.clause_count > 4:
+        base += 0.3
+
     return max(0.0, min(10.0, base))
 
 

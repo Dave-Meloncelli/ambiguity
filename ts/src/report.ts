@@ -133,6 +133,7 @@ export function jsonReport(result: ParseResult, score: AmbiguityScore): Record<s
       constraints: result.constraints,
       acronyms: result.acronyms.map(([a, e]) => ({ abbreviation: a, expansion: e })),
       unqualified_refs: result.unqualifiedRefs,
+      vocabulary_scope: result.vocabScope,
       fuzzy_verbs: result.fuzzyVerbs,
       typo_words: result.typoWords,
       stutter_words: result.stutterWords,

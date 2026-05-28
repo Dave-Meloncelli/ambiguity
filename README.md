@@ -62,6 +62,7 @@ ambiguity learn acronym "API" --expansion "Application Programming Interface"
 ## Features
 
 - **Verb taxonomy** — 80+ verbs mapped to prediction-space containers with specificity scores
+- **Vocabulary scope** — detects domain-specific jargon (ecosystem/technical/metaphor), flags undefined terms
 - **Constraint detection** — flags missing boundaries, unqualified references, vague pronouns
 - **Acronym expansion** — known acronyms expanded, unknown ones flagged
 - **Fuzzy matching** — Levenshtein distance-1 catches typos and inflected forms
@@ -101,9 +102,13 @@ MIT — see [LICENSE](LICENSE)
 |------|---------------|
 | `opencode.json` | opencode (canonical entry) |
 | `CLAUDE.md` | Claude Code |
-| `.cursor/rules/` | Cursor IDE (scoped rules) |
+| `.cursor/rules/` | Cursor IDE (scoped `.mdc` rules) |
 | `.github/copilot-instructions.md` | GitHub Copilot |
+| `.github/instructions/` | Copilot scoped (Python + TS instructions) |
 | `.windsurf/rules/` | Windsurf (Codeium) |
+| `.clinerules/` | Cline / Roo |
+| `.gemini/GEMINI.md` | Gemini CLI (Google) |
+| `.grok/GROK.md` | Grok CLI (xAI) |
 | `CONVENTIONS.md` | Aider |
 | `docs/AGENTS.md` | Agent guide with conventions |
 | `docs/QUICKSTART.md` | Human + agent walkthrough |

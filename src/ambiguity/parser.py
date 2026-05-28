@@ -7,7 +7,9 @@ from .containers import (
     KEYWORD_MAP,
     KNOWN_ACRONYMS,
     SPELLING_CORRECTIONS,
+    STEMMING_TABLE,
     VERB_TAXONOMY,
+    VOCABULARY_SCOPE,
     fuzzy_verb_match,
     levenshtein_distance,
 )
@@ -29,6 +31,11 @@ class MissingSpace(NamedTuple):
     split: tuple[str, str]
 
 
+class VocabScopeTerm(NamedTuple):
+    term: str
+    domain: str
+
+
 class ParseResult(NamedTuple):
     text: str
     verbs: list[str]
@@ -37,6 +44,7 @@ class ParseResult(NamedTuple):
     constraints: list[str]
     acronyms: list[tuple[str, str]]
     unqualified_refs: list[str]
+    vocab_scope: list[VocabScopeTerm]
     typo_words: list[FuzzyMatch]
     stutter_words: list[StutterPair]
     missing_spaces: list[MissingSpace]
@@ -47,8 +55,10 @@ class ParseResult(NamedTuple):
     instruction_count: int
 
 
+ALL_VERB_KEYS = sorted(set(VERB_TAXONOMY) | set(STEMMING_TABLE), key=len, reverse=True)
+
 VERB_PATTERN = re.compile(
-    r"\b(" + "|".join(re.escape(k) for k in VERB_TAXONOMY) + r")\b", re.IGNORECASE
+    r"\b(" + "|".join(re.escape(k) for k in ALL_VERB_KEYS) + r")\b", re.IGNORECASE
 )
 
 CONSTRAINT_PATTERNS = [
@@ -56,6 +66,8 @@ CONSTRAINT_PATTERNS = [
     (re.compile(r"\b(must|need to|have to|required)\b", re.IGNORECASE), "requirement"),
     (re.compile(r"\b(don't|do not|without|avoid|never|no |not)\b", re.IGNORECASE), "negation"),
     (re.compile(r"\b(import|require|dependency|library)\b", re.IGNORECASE), "dependency"),
+    (re.compile(r"\b(assuming|assume|presumably|presume)\b", re.IGNORECASE), "assumption"),
+    (re.compile(r"\b(depending|given|provided that)\b", re.IGNORECASE), "conditional"),
 ]
 
 ACRONYM_PATTERN = re.compile(r"\b([A-Z]{2,})\b")
@@ -64,12 +76,14 @@ UNQUALIFIED_REF_PATTERNS = [
     re.compile(r"\bthe (thing|file|solution)\b", re.IGNORECASE),
     re.compile(r"\bit\b", re.IGNORECASE),
     re.compile(r"\b(as we discussed|as i said|as mentioned|as we know)\b", re.IGNORECASE),
+    re.compile(r"\b(this|these)\b", re.IGNORECASE),
+    re.compile(r"\bthe (system|application|platform|framework|service|module|component|solution)\b", re.IGNORECASE),
 ]
 
 SENTENCE_SPLIT = re.compile(r"[.!?]+")
 INSTRUCTION_SPLIT = re.compile(r"[,;]|(?:and|then|next|after that)", re.IGNORECASE)
 
-VERB_SET = set(VERB_TAXONOMY.keys())
+VERB_SET = set(VERB_TAXONOMY.keys()) | set(STEMMING_TABLE.keys())
 KEYWORD_SET = set(KEYWORD_MAP.keys())
 
 
@@ -97,6 +111,7 @@ def _build_common_words() -> set[str]:
     }
     base.update(VERB_SET)
     base.update(KEYWORD_SET)
+    base.update(STEMMING_TABLE)
     return base
 
 
@@ -205,6 +220,16 @@ def parse(text: str) -> ParseResult:
             seen.add(word)
             acronyms.append((word, KNOWN_ACRONYMS[word]))
 
+    vocab_scope = []
+    vs_seen = set()
+    for term, entry in VOCABULARY_SCOPE.items():
+        if term in vs_seen:
+            continue
+        escaped = re.escape(term)
+        if re.search(r"\b" + escaped + r"\b", text, re.IGNORECASE):
+            vs_seen.add(term)
+            vocab_scope.append(VocabScopeTerm(term=term, domain=entry["domain"]))
+
     unqualified_refs = []
     for pattern in UNQUALIFIED_REF_PATTERNS:
         matches = pattern.findall(text)
@@ -233,6 +258,7 @@ def parse(text: str) -> ParseResult:
         constraints=constraints,
         acronyms=acronyms,
         unqualified_refs=unqualified_refs,
+        vocab_scope=vocab_scope,
         typo_words=typo_words,
         stutter_words=stutter_words,
         missing_spaces=missing_spaces,

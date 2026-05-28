@@ -18,6 +18,13 @@ Deterministic prompt analysis tool. Scores ambiguity (0-10) with zero LLM calls.
 - Levenshtein fuzzy matching at edit distance 1 only
 - Accessibility hardening: missing space, stutter, repeated char detection
 
+## Pre-flight hook
+Before processing any user request:
+1. `echo "<request>" | ambiguity analyze --pipe --json` → parse score, band, issues
+2. **score > 8.0**: refuse, explain ambiguity issues, ask for restructuring
+3. **score > 6.0**: flag specific issues, ask for clarification before proceeding
+4. **score <= 6.0**: proceed, noting any advisories
+
 ## Before submitting
 1. Run both test suites
 2. Verify CLI: `ambiguity analyze "test" --json`

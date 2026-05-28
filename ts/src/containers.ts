@@ -259,8 +259,14 @@ export function specificityBand(score: number): string {
 }
 
 export function containersForVerb(verb: string): [string[], number] {
-  const entry = VERB_TAXONOMY[verb.toLowerCase()]
+  const lower = verb.toLowerCase()
+  const entry = VERB_TAXONOMY[lower]
   if (entry) return [entry.containers, entry.specificity]
+  const stem = STEMMING_TABLE[lower]
+  if (stem) {
+    const stemEntry = VERB_TAXONOMY[stem]
+    if (stemEntry) return [stemEntry.containers, stemEntry.specificity]
+  }
   return [[], 0.0]
 }
 
@@ -512,6 +518,7 @@ const FUZZY_IGNORE = new Set([
   "like",
   "love",
   "hate",
+  "no",
   "one",
   "two",
   "three",
@@ -522,18 +529,123 @@ const FUZZY_IGNORE = new Set([
   "eight",
   "nine",
   "ten",
+  "not",
+  "dual",
+  "watch",
 ])
+
+function generateInflections(verb: string): string[] {
+  const forms: string[] = []
+  // -s form
+  if (/[szx]|sh|ch|o$/.test(verb)) forms.push(verb + "es")
+  else if (/[^aeiou]y$/.test(verb) && verb.length > 1) forms.push(verb.slice(0, -1) + "ies")
+  else forms.push(verb + "s")
+  // -ed form
+  if (verb.endsWith("e")) forms.push(verb + "d")
+  else if (/[^aeiou]y$/.test(verb) && verb.length > 1) forms.push(verb.slice(0, -1) + "ied")
+  else if (/[^aeiouwyx][aeiou][^aeiouwyx]$/.test(verb) && verb.length > 2)
+    forms.push(verb + verb[verb.length - 1] + "ed")
+  else forms.push(verb + "ed")
+  // -ing form
+  if (verb.endsWith("ie")) forms.push(verb.slice(0, -2) + "ying")
+  else if (verb.endsWith("e") && !verb.endsWith("ee")) forms.push(verb.slice(0, -1) + "ing")
+  else if (/[^aeiouwyx][aeiou][^aeiouwyx]$/.test(verb) && verb.length > 2)
+    forms.push(verb + verb[verb.length - 1] + "ing")
+  else forms.push(verb + "ing")
+  return forms
+}
+
+function buildStemmingTable(): Record<string, string> {
+  const table: Record<string, string> = {}
+  for (const verb of Object.keys(VERB_TAXONOMY)) {
+    for (const form of generateInflections(verb)) {
+      table[form] = verb
+    }
+  }
+  const IRREGULAR_FORMS: Record<string, string> = {
+    wrote: "write", written: "write", writing: "write",
+    thought: "think", thinking: "think",
+    dealt: "deal", dealing: "deal",
+    built: "build", building: "build",
+    began: "begin", begun: "begin", beginning: "begin",
+    broke: "break", broken: "break", breaking: "break",
+    brought: "bring", bringing: "bring",
+    bought: "buy", buying: "buy",
+    chose: "choose", chosen: "choose", choosing: "choose",
+    came: "come", coming: "come",
+    drew: "draw", drawn: "draw", drawing: "draw",
+    drove: "drive", driven: "drive", driving: "drive",
+    ate: "eat", eaten: "eat", eating: "eat",
+    fell: "fall", fallen: "fall", falling: "fall",
+    flew: "fly", flown: "fly", flying: "fly",
+    forgot: "forget", forgotten: "forget", forgetting: "forget",
+    gave: "give", given: "give", giving: "give",
+    grew: "grow", grown: "grow", growing: "grow",
+    hid: "hide", hidden: "hide", hiding: "hide",
+    kept: "keep", keeping: "keep",
+    knew: "know", known: "know", knowing: "know",
+    led: "lead", leading: "lead",
+    left: "leave", leaving: "leave",
+    lost: "lose", losing: "lose",
+    made: "make", making: "make",
+    meant: "mean", meaning: "mean",
+    met: "meet", meeting: "meet",
+    paid: "pay", paying: "pay",
+    put: "put", putting: "put",
+    ran: "run", running: "run",
+    said: "say", saying: "say",
+    saw: "see", seen: "see", seeing: "see",
+    sent: "send", sending: "send",
+    set: "set", setting: "set",
+    spoke: "speak", spoken: "speak", speaking: "speak",
+    spent: "spend", spending: "spend",
+    stood: "stand", standing: "stand",
+    took: "take", taken: "take", taking: "take",
+    taught: "teach", teaching: "teach",
+    told: "tell", telling: "tell",
+    understood: "understand", understanding: "understand",
+    went: "go", gone: "go", going: "go",
+    won: "win", winning: "win",
+    implementation: "implement",
+    implementations: "implement",
+    configuration: "configure",
+    configurations: "configure",
+    deployment: "deploy",
+    deployments: "deploy",
+    integration: "integrate",
+    integrations: "integrate",
+    migration: "migrate",
+    migrations: "migrate",
+    optimization: "optimize",
+    optimizations: "optimize",
+    validation: "validate",
+    validations: "validate",
+    verification: "verify",
+    verifications: "verify",
+    documentation: "document",
+    summarization: "summarize",
+    refactoring: "refactor",
+    refactored: "refactor",
+  }
+  for (const [form, base] of Object.entries(IRREGULAR_FORMS)) {
+    if (!table[form]) table[form] = base
+  }
+  return table
+}
+
+export const STEMMING_TABLE = buildStemmingTable()
 
 export function fuzzyVerbMatch(word: string): { verb: string; distance: number } | null {
   const lower = word.toLowerCase()
-  if (FUZZY_IGNORE.has(lower)) return null
   if (VERB_TAXONOMY[lower]) return { verb: lower, distance: 0 }
+  if (STEMMING_TABLE[lower]) return { verb: STEMMING_TABLE[lower], distance: 1 }
+  if (FUZZY_IGNORE.has(lower)) return null
   let best: { verb: string; distance: number } | null = null
   const knownVerbs = Object.keys(VERB_TAXONOMY)
   for (const known of knownVerbs) {
     const d = levenshteinDistance(lower, known)
     if (d === 0) return { verb: known, distance: 0 }
-    const maxDist = 1 // distance 2 produces too many false positives from common nouns
+    const maxDist = 1
     if (d <= maxDist) {
       if (!best || d < best.distance) {
         best = { verb: known, distance: d }
@@ -541,6 +653,44 @@ export function fuzzyVerbMatch(word: string): { verb: string; distance: number }
     }
   }
   return best
+}
+
+/** Vocabulary scope — domain-specific terms ambiguous to general audiences. */
+export interface VocabularyEntry {
+  domain: "ecosystem" | "technical" | "metaphor"
+  suggestion?: string
+}
+
+export const VOCABULARY_SCOPE: Record<string, VocabularyEntry> = {
+  // Compound ecosystem concepts — opaque outside their ecosystem
+  "surface anchor": { domain: "ecosystem" },
+  "capability packet": { domain: "ecosystem" },
+  "proof condition": { domain: "ecosystem" },
+  "retained surfaces": { domain: "ecosystem" },
+  "udl envelope": { domain: "ecosystem" },
+  "chap surface": { domain: "ecosystem" },
+  fleshuit: { domain: "ecosystem" },
+  aruss: { domain: "ecosystem" },
+  laminar: { domain: "ecosystem" },
+
+  // Single terms used metaphorically as technical jargon
+  canonical: { domain: "technical" },
+  envelope: { domain: "metaphor" },
+  surface: { domain: "metaphor" },
+  bridge: { domain: "metaphor" },
+  anchor: { domain: "metaphor" },
+
+  // General technical register — often used without plain-language anchor
+  taxonomy: { domain: "technical" },
+  specificity: { domain: "technical" },
+  deterministic: { domain: "technical" },
+  heuristic: { domain: "technical" },
+  entropy: { domain: "technical" },
+  empirical: { domain: "technical" },
+  methodology: { domain: "technical" },
+  paradigm: { domain: "technical" },
+  orthogonal: { domain: "technical" },
+  idempotent: { domain: "technical" },
 }
 
 export const SPELLING_CORRECTIONS: Record<string, string> = {

@@ -30,8 +30,17 @@ ambiguity analyze "your prompt"
 cd ts && npm install && npm run quality
 ```
 
-## Rules
+## Pre-flight self-assessment
+When you receive a coding request, self-evaluate against this ambiguity rubric before responding:
+- **Action verb**: specific (implement/convert/verify) or vague (do/make/handle)?
+- **Constraints present**: language, framework, boundaries, exclusions?
+- **Unqualified refs**: "it", "the thing", "as we discussed" without anchor?
+- **Acronyms**: expanded on first use?
+- **Instruction count**: 3+ instructions in one prompt = overloaded
+- **Domain jargon**: technical terms without definition?
+Score 0-10: 0-3 proceed, 3-6 flag issues, 6-8 ask clarification, 8-10 request restructuring.
 
+## Rules
 1. Keep Python and TypeScript implementations identical
 2. No LLM calls in analysis code
 3. Run both test suites before submitting changes

@@ -1,0 +1,44 @@
+#!/bin/sh
+# Pre-commit hook — runs ambiguity analysis on changed .md files.
+# Fails commit if any file scores > 6.0 (configurable via GATE env var).
+# Skip: SKIP_AMBIGUITY=1 git commit
+
+if [ -n "$SKIP_AMBIGUITY" ]; then
+    exit 0
+fi
+
+GATE="${AMBIGUITY_GATE:-6.0}"
+
+if ! command -v ambiguity >/dev/null 2>&1; then
+    echo "[ambiguity] not installed — skipping pre-commit hook"
+    exit 0
+fi
+
+staged=$(git diff --cached --name-only --diff-filter=ACM | grep -i '\.md$' || true)
+if [ -z "$staged" ]; then
+    exit 0
+fi
+
+failed=0
+for file in $staged; do
+    if [ ! -f "$file" ]; then
+        continue
+    fi
+    content=$(git show ":${file}" 2>/dev/null || cat "$file")
+    if [ -z "$content" ]; then
+        continue
+    fi
+    if echo "$content" | ambiguity analyze --pipe --gate "$GATE" >/dev/null 2>/dev/null; then
+        echo "[ambiguity] OK: $file — passes gate $GATE"
+    else
+        echo "[ambiguity] FAIL: $file — exceeds gate $GATE"
+        failed=1
+    fi
+done
+
+if [ "$failed" -ne 0 ]; then
+    echo "[ambiguity] set SKIP_AMBIGUITY=1 to bypass, or adjust with AMBIGUITY_GATE=<threshold>"
+    exit 1
+fi
+
+exit 0

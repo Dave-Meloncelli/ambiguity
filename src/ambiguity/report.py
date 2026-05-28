@@ -1,6 +1,7 @@
 """Terminal output formatting for analysis results."""
 
 import sys
+import textwrap
 
 from .parser import ParseResult
 from .scoring import AmbiguityScore
@@ -53,7 +54,10 @@ def render_report(result: ParseResult, score: AmbiguityScore, udl_info: str | No
     lines.append(f"{TE}{BOX * (width - 2)}{BE}")
 
     def row(label: str, value: str):
-        content = f"{label}: {value}"
+        if not label:
+            content = value
+        else:
+            content = f"{label}: {value}"
         line = content[:width - 4]
         lines.append(f"{V}  {line.ljust(width - 4)}{V}")
 
@@ -62,11 +66,16 @@ def render_report(result: ParseResult, score: AmbiguityScore, udl_info: str | No
 
     band_symbol = {"low": OK, "medium": WARN, "high": WARN, "very high": BAD}
     sym = band_symbol.get(score.band, "?")
-    row("", f"  {sym} {score.band.upper()}")
-
     adv = advisory(result, score)
     if adv:
-        row("Tip", adv[:width - 10])
+        tip_label = f"  {sym} Tip"
+        tip_prefix = f"{tip_label}: "
+        body_w = width - 4 - len(tip_prefix)
+        wrapped = textwrap.wrap(adv, width=max(body_w, 30))
+        for i, wline in enumerate(wrapped):
+            prefix = tip_prefix if i == 0 else " " * len(tip_prefix)
+            display = f"{prefix}{wline}"[:width - 4]
+            lines.append(f"{V}  {display.ljust(width - 4)}{V}")
 
     lines.append(f"{TE}{BOX * (width - 2)}{BE}")
 
@@ -80,11 +89,9 @@ def render_report(result: ParseResult, score: AmbiguityScore, udl_info: str | No
                 fuzzy = fv
                 break
         verb_label = (
-            f"{verb} (from '{fuzzy.original}', edit-dist {fuzzy.distance})"
-            if fuzzy else verb
+            f"{verb} (from '{fv.original}')" if fuzzy else verb
         )
-        row(f"  Verb: {verb_label}", f"{band} (spec: {spec:.2f})")
-        row("", f"  containers: {c_str}")
+        row(f"  Verb: {verb_label}", f"{band}  spec: {spec:.2f}  [{c_str}]")
 
     if result.typo_words:
         row("Typos", ", ".join(f"{t.original}->{t.corrected}" for t in result.typo_words))
@@ -102,6 +109,8 @@ def render_report(result: ParseResult, score: AmbiguityScore, udl_info: str | No
     row("Keywords", ", ".join(result.keywords[:6]) if result.keywords else "(none)")
     row("Constraints", ", ".join(result.constraints) if result.constraints else "(none)")
     row("Acronyms", ", ".join(f"{a}->{e}" for a, e in result.acronyms) if result.acronyms else "(none)")
+    if result.vocab_scope:
+        row("Vocab", ", ".join(f"{vt.term}({vt.domain})" for vt in result.vocab_scope[:4]))
     row("Instructions", str(result.instruction_count))
     row("Words", str(result.word_count))
 
@@ -155,6 +164,7 @@ def render_json(result: ParseResult, score: AmbiguityScore) -> dict:
             ],
             "constraints": result.constraints,
             "acronyms": [{"abbreviation": a, "expansion": e} for a, e in result.acronyms],
+            "vocabulary_scope": [{"term": vt.term, "domain": vt.domain} for vt in result.vocab_scope],
             "unqualified_refs": result.unqualified_refs,
             "fuzzy_verbs": [{"original": fv.original, "corrected": fv.corrected, "distance": fv.distance} for fv in result.fuzzy_verbs],
             "typo_words": [{"original": tw.original, "corrected": tw.corrected, "distance": tw.distance} for tw in result.typo_words],

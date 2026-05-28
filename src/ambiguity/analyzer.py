@@ -1,20 +1,37 @@
 """Core analysis pipeline — orchestrates parse, score, and report."""
 
-from .parser import parse, ParseResult
+from .parser import parse, ParseResult, VERB_SET
 from .scoring import AmbiguityScore
 from .report import render_report, render_json
 from .bridges import as_udl_envelope, as_minimal_envelope
+from .rhetoric import analyze_rhetoric, RhetoricResult
+from .chunking import chunk, ChunkResult
+from .constraints import ConstraintAnalysis
+from .embeddings import analyze_keyword_coverage, EmbeddingAnalysis, DOMAIN_KEYWORDS
 
 
 class Analysis:
     result: ParseResult
     score: AmbiguityScore
+    rhetoric: RhetoricResult
+    chunking: ChunkResult
+    constraint_analysis: ConstraintAnalysis
+    embedding_analysis: EmbeddingAnalysis
     udl_envelope: str | None
     minimal_envelope: dict
 
     def __init__(self, text: str):
+        self.raw_text = text
         self.result = parse(text)
-        self.score = AmbiguityScore(self.result)
+        self.rhetoric = analyze_rhetoric(text)
+        self.chunking = chunk(text, known_verbs=VERB_SET)
+        self.score = AmbiguityScore(self.result, self.rhetoric, self.chunking)
+
+        self.constraint_analysis = ConstraintAnalysis.from_parse(self.result)
+        self.embedding_analysis = analyze_keyword_coverage(
+            existing_keywords=self.result.keywords + self.result.verbs,
+            domain_keywords=DOMAIN_KEYWORDS,
+        )
 
         udl = as_udl_envelope(self.result, self.score)
         self.udl_envelope = udl if isinstance(udl, str) else None
@@ -22,10 +39,7 @@ class Analysis:
         self.minimal_envelope = as_minimal_envelope(self.result, self.score)
 
     def terminal_report(self) -> str:
-        udl_info = None
-        if self.udl_envelope:
-            udl_info = f"envelope written ({len(self.udl_envelope)} bytes)"
-        return render_report(self.result, self.score, udl_info=udl_info)
+        return render_report(self.result, self.score)
 
     def json_report(self) -> dict:
         return render_json(self.result, self.score)

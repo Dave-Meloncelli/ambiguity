@@ -8,7 +8,7 @@ A deterministic prompt analysis tool. It takes a human-written prompt and lints
 it for translation ambiguity before it reaches an LLM.
 
 - **Input:** raw prompt text
-- **Output:** ambiguity score (0-10), advisory, verb/container mapping, UDL envelope
+- **Output:** ambiguity score (0-10), advisory, verb/container mapping, vocabulary scope analysis, UDL envelope
 - **Cost:** zero (regex + dict + arithmetic, no LLM calls)
 
 ## Install

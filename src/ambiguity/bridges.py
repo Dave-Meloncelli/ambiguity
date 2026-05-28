@@ -1,4 +1,5 @@
-"""Bridges to Federation infrastructure — UDL envelope wrapping."""
+"""Bridges to Federation infrastructure — UDL envelope wrapping.
+Preserves all analysis dimensions; no flattening of individual considerations."""
 
 from __future__ import annotations
 
@@ -27,18 +28,68 @@ def _import_udl_envelope():
         return None, None
 
 
-def as_udl_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str, Any] | str | None:
-    """Wrap analysis results into a UDL envelope if Federation schema is available."""
-    build_fn, _ = _import_udl_envelope()
-    if build_fn is None:
-        return None
-
-    raw = {
-        "prompt": result.text,
+def _build_normalized_view(result: ParseResult, score: AmbiguityScore) -> dict[str, Any]:
+    return {
+        "ambiguity_score": round(score.total, 1),
+        "band": score.band,
+        "verb_specificity": round(score.verb_specificity, 2),
+        "container_overlap": score.container_overlap,
+        "constraint_count": score.constraint_count,
+        "instruction_density": round(score.instruction_density, 2),
+        "unqualified_ref_count": len(result.unqualified_refs),
+        "entropy_indicator_count": len(score.entropy_indicators),
+        "entropy_indicators": score.entropy_indicators,
+        "has_terminal_punctuation": result.has_terminal_punctuation,
         "word_count": result.word_count,
         "sentence_count": result.sentence_count,
         "instruction_count": result.instruction_count,
     }
+
+
+def _build_analysis(result: ParseResult) -> dict[str, Any]:
+    return {
+        "verbs": [
+            {
+                "word": v,
+                "containers": _containers.containers_for_verb(v)[0],
+                "specificity": _containers.containers_for_verb(v)[1],
+                "band": _containers.specificity_band(_containers.containers_for_verb(v)[1]),
+            }
+            for v in result.verbs
+        ],
+        "fuzzy_verb_matches": [
+            {"original": fv.original, "corrected": fv.corrected, "distance": fv.distance}
+            for fv in result.fuzzy_verbs
+        ],
+        "keywords": result.keywords,
+        "constraints": result.constraints,
+        "acronyms": [{"abbreviation": a, "expansion": e} for a, e in result.acronyms],
+        "vocabulary_scope": [{"term": vt.term, "domain": vt.domain} for vt in result.vocab_scope],
+        "unqualified_refs": result.unqualified_refs,
+        "typo_words": [
+            {"original": tw.original, "corrected": tw.corrected, "distance": tw.distance}
+            for tw in result.typo_words
+        ],
+        "missing_spaces": [
+            {"combined": ms.combined, "split": list(ms.split)}
+            for ms in result.missing_spaces
+        ],
+        "stutter_words": [
+            {"word": sw.word, "occurrences": sw.occurrences}
+            for sw in result.stutter_words
+        ],
+        "repeated_chars": result.repeated_chars,
+    }
+
+
+def as_udl_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str, Any] | str | None:
+    """Wrap full analysis into a UDL envelope if Federation schema is available."""
+    build_fn, _ = _import_udl_envelope()
+    if build_fn is None:
+        return None
+
+    norm = _build_normalized_view(result, score)
+    analysis = _build_analysis(result)
 
     bridge = {
         "job_story": "Analyze prompt for ambiguity before LLM processing",
@@ -46,13 +97,18 @@ def as_udl_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str, Any
         "baseline_shape": result.text,
         "evidence_signals": score.entropy_indicators,
         "constraint_summary": result.constraints,
+        "vocabulary_scope": [vt.term for vt in result.vocab_scope],
         "status": "analyzed",
     }
 
     envelope = build_fn(
         surface="ambiguity_framework",
         agent_id="ambiguity_analyzer_v0.1",
-        raw_payload=raw,
+        raw_payload={
+            "prompt": result.text,
+            **norm,
+            **analysis,
+        },
         run_id=f"run_{uuid4().hex[:8]}",
         source_of_truth="D:\\Ambiguity",
         intent="Analyze prompt for translation ambiguity",
@@ -73,7 +129,10 @@ def as_udl_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str, Any
 
 
 def as_minimal_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str, Any]:
-    """Standalone envelope format (works without Federation UDL schema)."""
+    """Standalone envelope format — preserves all analysis dimensions."""
+    norm = _build_normalized_view(result, score)
+    analysis = _build_analysis(result)
+
     return {
         "_envelope": {
             "format": "ambiguity_analysis_v1",
@@ -86,28 +145,9 @@ def as_minimal_envelope(result: ParseResult, score: AmbiguityScore) -> dict[str,
         "raw_payload": {
             "prompt": result.text,
             "word_count": result.word_count,
+            "sentence_count": result.sentence_count,
             "instruction_count": result.instruction_count,
         },
-        "normalized_view": {
-            "ambiguity_score": round(score.total, 1),
-            "band": score.band,
-            "verb_specificity": round(score.verb_specificity, 2),
-            "container_count": score.container_overlap,
-            "constraint_count": score.constraint_count,
-            "entropy_indicator_count": len(score.entropy_indicators),
-            "unqualified_refs": result.unqualified_refs,
-        },
-        "analysis": {
-            "verbs": [
-                {
-                    "word": v,
-                    "containers": _containers.containers_for_verb(v)[0],
-                    "specificity": _containers.containers_for_verb(v)[1],
-                }
-                for v in result.verbs
-            ],
-            "keywords": result.keywords,
-            "constraints": result.constraints,
-            "acronyms": dict(result.acronyms),
-        },
+        "normalized_view": norm,
+        "analysis": analysis,
     }

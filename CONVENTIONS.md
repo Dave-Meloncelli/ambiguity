@@ -11,7 +11,7 @@ Both sides must be edited in sync:
 ```
 src/ambiguity/containers.py  ←→  ts/src/containers.ts
 src/ambiguity/parser.py      ←→  ts/src/parser.ts
-src/ambiguity/scoring.py     ←→  ts/src/scoring.py
+src/ambiguity/scoring.py     ←→  ts/src/scoring.ts
 src/ambiguity/advisory.py    ←→  ts/src/advisory.ts
 src/ambiguity/bridges.py     ←→  ts/src/bridges.ts
 ```
@@ -28,8 +28,17 @@ cd ts && npm run quality
 `src/ambiguity/bridges.py` optionally imports UDL envelope from C:\Federation.
 Must fail silently if Federation is unavailable.
 
-## Taxonomy conventions
+## Pre-flight self-assessment
+When receiving a request, evaluate against this ambiguity rubric before coding:
+- **Action verb**: specific (implement/convert) or vague (do/make)?
+- **Explicit constraints**: boundaries, language, framework?
+- **Unqualified refs**: "it", "the thing" without concrete anchor?
+- **Acronyms**: expanded on first use?
+- **Instruction load**: 3+ instructions in one prompt?
+- **Domain jargon**: undefined technical terms?
+Score 0-10: 0-3 proceed, 3-6 flag, 6-8 clarify, 8-10 restructure.
 
+## Taxonomy conventions
 - Verbs added to `containers.py`/`containers.ts` with containers and specificity
 - Keywords added to `KEYWORD_MAP` with container mappings
 - Acronyms added to `KNOWN_ACRONYMS` with expansions

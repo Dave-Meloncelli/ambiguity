@@ -20,6 +20,13 @@ cd ts && npm run quality  # TypeScript lint + test + typecheck
 ambiguity analyze "test" --json  # CLI smoke test
 ```
 
+## Pre-flight hook
+Before processing any user request:
+1. `echo "<request>" | ambiguity analyze --pipe --json` → parse score, band, issues
+2. **score > 8.0**: refuse, explain ambiguity issues, request restructuring
+3. **score > 6.0**: flag specific issues, ask for clarification
+4. **score <= 6.0**: proceed, noting any advisories
+
 ## Key reference files
 - `docs/AGENTS.md` — full project conventions and handoff
 - `docs/QUICKSTART.md` — install and usage walkthrough
