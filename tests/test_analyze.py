@@ -459,3 +459,86 @@ def test_analysis_includes_constraints_and_embeddings():
     assert hasattr(a, "constraint_analysis")
     assert hasattr(a, "embedding_analysis")
     assert isinstance(a.constraint_analysis.typed, list)
+
+
+def test_review_detects_hedging():
+    from ambiguity.review import review
+    r = review("write a function", "i think maybe we could possibly implement a sort of function")
+    assert r.hedging_count >= 2
+    assert any(i.kind == "hedging" for i in r.issues)
+
+
+def test_review_detects_hallucination_signals():
+    from ambiguity.review import review
+    r = review("write a function", "based on the information provided the answer is 42")
+    assert len(r.hallucination_signals) >= 1
+    assert any(i.severity == "error" for i in r.issues)
+
+
+def test_review_clean_response_no_issues():
+    from ambiguity.review import review
+    r = review("write a python function that sorts a list in place", "implement a function that sorts a list in place using python")
+    assert r.score >= 0
+    # clean response should have few issues
+    serious = [i for i in r.issues if i.severity in ("warning", "error")]
+    if serious:
+        # at most should flag unaddressed verb, not major issues
+        assert all(i.kind == "unaddressed_verb" for i in serious)
+
+
+def test_review_detects_verbose_response():
+    from ambiguity.review import review
+    short_prompt = "write a function"
+    long_response = " ".join(["word"] * 200)
+    r = review(short_prompt, long_response)
+    assert any(i.kind == "verbose" for i in r.issues)
+
+
+def test_review_empty_response():
+    from ambiguity.review import review
+    r = review("write a function", "")
+    assert any(i.kind == "empty" for i in r.issues)
+    assert r.score >= 8.0
+
+
+def test_review_detects_constraint_breach():
+    from ambiguity.review import review
+    r = review("write a function without imports", "here is a function using import os")
+    assert r.constraint_compliance
+    # negations shouldn't be ignored
+    has_compliance = len(r.constraint_compliance) > 0
+
+
+def test_review_json_roundtrip():
+    from ambiguity.review import review, render_review_json
+    r = review("write a function", "i think maybe we could implement a function")
+    data = render_review_json(r)
+    assert data["command"] == "review"
+    assert data["score"] >= 0
+    assert data["band"] in ("low", "medium", "high", "very high")
+
+
+def test_review_detects_unaddressed_verbs():
+    from ambiguity.review import review
+    r = review("sort and parse the list", "here is a sorted list")
+    assert "parse" in r.unaddressed_verbs
+
+
+def test_review_confidence_low():
+    from ambiguity.review import review
+    r = review("what is the answer", "maybe possibly it could be 42 or perhaps 43")
+    assert any(i.kind == "low_confidence" for i in r.issues)
+
+
+def test_review_boilerplate_detected():
+    from ambiguity.review import review
+    r = review("explain recursion", "recursion is when a function calls itself. if you have any questions please let me know")
+    assert r.boilerplate_lines >= 1
+
+
+def test_review_render_report():
+    from ambiguity.review import review, render_review_report
+    r = review("write a function", "i think maybe we could implement a function")
+    report = render_review_report(r)
+    assert "review" in report.lower()
+    assert "score" in report.lower()

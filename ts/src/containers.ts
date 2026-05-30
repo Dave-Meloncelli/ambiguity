@@ -242,6 +242,7 @@ export const KEYWORD_MAP: Record<string, KeywordEntry> = {
   how: { containers: ["explanation"] },
   what: { containers: ["retrieval", "explanation"] },
   "step by step": { containers: ["reasoning"] },
+  think: { containers: ["reasoning"] },
 }
 
 const SPECIFICITY_BANDS: [number, number, string][] = [

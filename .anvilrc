@@ -1,0 +1,10 @@
+schemaVersion: "1.0.0"
+planningDir: "plans"
+format: "yaml"
+checks:
+  - "import-boundaries"
+  - "antipattern-scan"
+  - "coverage"
+  - "dependency"
+  - "policy"
+  - "command-safety"

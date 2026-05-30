@@ -7,12 +7,15 @@ import { analyzeRhetoric } from "./rhetoric.js"
 import type { RhetoricResult } from "./rhetoric.js"
 import { chunk } from "./chunking.js"
 import type { ChunkResult } from "./chunking.js"
+import { constraintAnalysisFromParse } from "./constraints.js"
+import type { ConstraintAnalysis } from "./constraints.js"
 
 export class Analysis {
   result: ReturnType<typeof parse>
   rhetoric: RhetoricResult
   chunking: ChunkResult
   score: AmbiguityScore
+  constraintAnalysis: ConstraintAnalysis
   udlEnvelope: UdlEnvelope | null
 
   constructor(text: string) {
@@ -20,6 +23,7 @@ export class Analysis {
     this.rhetoric = analyzeRhetoric(text)
     this.chunking = chunk(text)
     this.score = new AmbiguityScore(this.result, this.rhetoric, this.chunking)
+    this.constraintAnalysis = constraintAnalysisFromParse(this.result)
     this.udlEnvelope = buildUdlEnvelope(this.result, this.score)
   }
 
@@ -36,6 +40,12 @@ export class Analysis {
 
   fullOutput(includeUdl: boolean): Record<string, unknown> {
     const output = this.jsonReport()
+    const envelope = {
+      parser: this.result,
+      score: { total: this.score.total, band: this.score.band },
+      udl: this.udlEnvelope,
+    }
+    output._envelope = envelope
     if (includeUdl && this.udlEnvelope) {
       output._udl_envelope = this.udlEnvelope
     }

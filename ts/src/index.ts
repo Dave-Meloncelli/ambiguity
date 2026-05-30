@@ -77,3 +77,19 @@ export {
   type HookResult,
   AnthropicHook,
 } from "./hooks.js"
+export {
+  type ReviewResult,
+  type ReviewIssue,
+  review,
+  renderReviewReport,
+  renderReviewJson,
+} from "./review.js"
+export {
+  ConstraintType,
+  ConstraintCategory,
+  ConstraintLevel,
+  upgradeConstraints,
+  constraintAnalysisFromParse,
+  type Constraint,
+  type ConstraintAnalysis,
+} from "./constraints.js"

@@ -63,6 +63,8 @@ const CONSTRAINT_PATTERNS: [RegExp, string][] = [
   [/\b(must|need to|have to|required)\b/i, "requirement"],
   [/\b(don't|do not|without|avoid|never|no |not)\b/i, "negation"],
   [/\b(import|require|dependency|library)\b/i, "dependency"],
+  [/\b(assuming|assume|presumably|presume)\b/i, "assumption"],
+  [/\b(depending|given|provided that)\b/i, "conditional"],
 ]
 
 const ACRONYM_PATTERN = /\b([A-Z]{2,})\b/g

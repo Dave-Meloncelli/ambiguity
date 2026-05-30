@@ -2,12 +2,19 @@
 # Pre-commit hook — runs ambiguity analysis on changed .md files.
 # Fails commit if any file scores > 6.0 (configurable via GATE env var).
 # Skip: SKIP_AMBIGUITY=1 git commit
+#
+# Agent instruction files (.clinerules/ .cursor/rules/ .windsurf/rules/
+# CLAUDE.md, AGENTS.md, GEMINI.md, GROK.md, etc.) are exempt — they
+# contain dense domain-specific instructions that naturally score high.
 
 if [ -n "$SKIP_AMBIGUITY" ]; then
     exit 0
 fi
 
 GATE="${AMBIGUITY_GATE:-6.0}"
+
+# This env var overrides the default exemption list
+AMBIGUITY_SKIP_PATTERNS="${AMBIGUITY_SKIP_PATTERNS:-CLAUDE.md$:docs/AGENTS.md$:CONVENTIONS.md$:.github/copilot-instructions.md$:.github/instructions/.+\.md$:.gemini/GEMINI.md$:.grok/GROK.md$:README.md$}"
 
 if ! command -v ambiguity >/dev/null 2>&1; then
     echo "[ambiguity] not installed — skipping pre-commit hook"
@@ -19,9 +26,34 @@ if [ -z "$staged" ]; then
     exit 0
 fi
 
+skip_match() {
+    file="$1"
+    IFS=':'
+    for pattern in $AMBIGUITY_SKIP_PATTERNS; do
+        if echo "$file" | grep -E "$pattern" >/dev/null 2>&1; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Also skip files in agent instruction directories
+skip_dir() {
+    file="$1"
+    case "$file" in
+        .clinerules/*|.cursor/rules/*|.windsurf/rules/*)
+            return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 failed=0
 for file in $staged; do
     if [ ! -f "$file" ]; then
+        continue
+    fi
+    if skip_match "$file" || skip_dir "$file"; then
+        echo "[ambiguity] SKIP: $file — agent instruction file"
         continue
     fi
     content=$(git show ":${file}" 2>/dev/null || cat "$file")

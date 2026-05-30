@@ -1,0 +1,2 @@
+# package-lock.json contains npm dependency hashes that trigger false positives
+ts/package-lock.json

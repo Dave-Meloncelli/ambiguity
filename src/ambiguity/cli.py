@@ -13,6 +13,7 @@ from .translate import translate, render_translate_report, render_translate_json
 from .clarify import clarify, render_clarify_report, render_clarify_json
 from .memory import log_interaction, summary as memory_summary
 from .import_discover import discover, render_import_report, render_import_json
+from .review import review, render_review_report, render_review_json
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -86,6 +87,11 @@ def build_parser() -> argparse.ArgumentParser:
     import_p.add_argument("--execute", action="store_true", help="Actually import (default is dry-run)")
     import_p.add_argument("--json", action="store_true", help="Output as JSON")
 
+    review_p = sub.add_parser("review", help="Analyze an LLM response for quality and constraint compliance")
+    review_p.add_argument("prompt", help="Original prompt text")
+    review_p.add_argument("--response", required=True, help="LLM response text to analyze")
+    review_p.add_argument("--json", action="store_true", help="Output as JSON")
+
     return parser
 
 
@@ -115,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_config(args)
     elif args.command == "flow-test":
         return _cmd_flow_test(args)
+    elif args.command == "review":
+        return _cmd_review(args)
 
     parser.print_help()
     return 0
@@ -369,6 +377,15 @@ def _cmd_import(args) -> int:
     else:
         print(render_import_report(result))
     return 0
+
+
+def _cmd_review(args) -> int:
+    result = review(args.prompt, args.response)
+    if args.json:
+        print(json.dumps(render_review_json(result), indent=2))
+    else:
+        print(render_review_report(result))
+    return 1 if any(i.severity == "error" for i in result.issues) else 0
 
 
 if __name__ == "__main__":

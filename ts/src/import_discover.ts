@@ -100,6 +100,57 @@ function walkJsonFiles(dir: string): string[] {
   return files
 }
 
+export function renderImportReport(result: ImportResult): string {
+  const sep = "=".repeat(56)
+  const lines: string[] = [sep]
+  lines.push("  ambiguity import — prompt history discovery")
+  lines.push(sep)
+  lines.push("")
+
+  if (result.sourcesScanned === 0) {
+    lines.push("  No consent given. Run with --consent to scan.")
+    lines.push(sep)
+    return lines.join("\n")
+  }
+
+  lines.push(`  Harness directories scanned: ${result.sourcesScanned}`)
+  lines.push(`  Unique prompts found:        ${result.promptsFound}`)
+  lines.push("")
+
+  if (result.samplePrompts.length > 0) {
+    lines.push("  Sample prompts found:")
+    for (const sp of result.samplePrompts.slice(0, 3)) {
+      const short = sp.preview.slice(0, 60)
+      lines.push(`    [${sp.harness}] ${short}...`)
+    }
+    lines.push("")
+  }
+
+  if (result.errors.length > 0) {
+    lines.push("  Warnings:")
+    for (const e of result.errors.slice(0, 3)) {
+      lines.push(`    ! ${e}`)
+    }
+    lines.push("")
+  }
+
+  lines.push(sep)
+  return lines.join("\n")
+}
+
+export function renderImportJson(result: ImportResult): Record<string, unknown> {
+  return {
+    command: "import",
+    sources_scanned: result.sourcesScanned,
+    prompts_found: result.promptsFound,
+    errors: result.errors,
+    sample_prompts: result.samplePrompts.slice(0, 5).map((sp) => ({
+      harness: sp.harness,
+      preview: sp.preview,
+    })),
+  }
+}
+
 export function discover(consent = false, dryRun = true): ImportResult {
   const result: ImportResult = { sourcesScanned: 0, promptsFound: 0, samplePrompts: [], errors: [] }
 

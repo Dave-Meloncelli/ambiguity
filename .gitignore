@@ -37,3 +37,4 @@ Thumbs.db
 
 # Federation bridge (optional, local only)
 C:/
+.anvil/cache/
