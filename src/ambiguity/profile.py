@@ -53,9 +53,21 @@ class Profile:
             self.score_baseline = data.get("score_baseline", 5.0)
             self.score_std = data.get("score_std")
             self.threshold = data.get("threshold", 4.0)
+            self._reapply_learned()
             self._recalibrate()
         except (json.JSONDecodeError, OSError):
             pass
+
+    def _reapply_learned(self):
+        for verb, entry in self.learned_verbs.items():
+            VERB_TAXONOMY[verb] = {
+                "containers": entry.get("containers", []),
+                "specificity": entry.get("specificity", 0.5),
+            }
+        for abbr, expansion in self.learned_acronyms.items():
+            KNOWN_ACRONYMS[abbr.upper()] = expansion
+        for keyword, entry in self.learned_keywords.items():
+            KEYWORD_MAP[keyword.lower()] = {"containers": entry.get("containers", [])}
 
     def _save(self):
         PROFILE_DIR.mkdir(parents=True, exist_ok=True)

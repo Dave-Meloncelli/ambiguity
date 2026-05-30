@@ -1,0 +1,7 @@
+__pycache__
+.git
+.venv
+node_modules
+.env
+.anvil
+ts/

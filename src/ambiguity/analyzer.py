@@ -8,6 +8,7 @@ from .rhetoric import analyze_rhetoric, RhetoricResult
 from .chunking import chunk, ChunkResult
 from .constraints import ConstraintAnalysis
 from .embeddings import analyze_keyword_coverage, EmbeddingAnalysis, DOMAIN_KEYWORDS
+from .profile import get_profile
 
 
 class Analysis:
@@ -25,7 +26,8 @@ class Analysis:
         self.result = parse(text)
         self.rhetoric = analyze_rhetoric(text)
         self.chunking = chunk(text, known_verbs=VERB_SET)
-        self.score = AmbiguityScore(self.result, self.rhetoric, self.chunking)
+        self.profile = get_profile()
+        self.score = AmbiguityScore(self.result, self.rhetoric, self.chunking, profile=self.profile)
 
         self.constraint_analysis = ConstraintAnalysis.from_parse(self.result)
         self.embedding_analysis = analyze_keyword_coverage(

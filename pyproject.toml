@@ -23,6 +23,12 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
+[project.optional-dependencies]
+server = ["fastapi", "uvicorn[standard]", "pydantic"]
+dev = ["pytest", "ruff"]
+hooks = ["anthropic", "openai"]
+all = ["fastapi", "uvicorn[standard]", "pydantic", "anthropic", "openai", "google-genai", "requests"]
+
 [project.scripts]
 ambiguity = "ambiguity.cli:main"
 

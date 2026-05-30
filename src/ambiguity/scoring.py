@@ -19,10 +19,11 @@ class AmbiguityScore:
     total: float
     band: str
 
-    def __init__(self, result: ParseResult, rhetoric=None, chunking=None):
+    def __init__(self, result: ParseResult, rhetoric=None, chunking=None, profile=None):
+        suppressed = set(profile.suppressed_flags()) if profile else set()
         self.verb_specificity = _verb_specificity(result.verbs)
         self.container_overlap = _container_overlap(result.verbs, result.keywords)
-        self.entropy_indicators = _entropy_indicators(result, rhetoric=rhetoric, chunking=chunking)
+        self.entropy_indicators = _entropy_indicators(result, rhetoric=rhetoric, chunking=chunking, suppressed=suppressed)
         self.unqualified_refs = len(result.unqualified_refs)
         self.constraint_count = len(result.constraints)
         self.instruction_density = _instruction_density(result)
@@ -56,11 +57,12 @@ def _container_overlap(verbs: list[str], keywords: list[str]) -> int:
     return len(all_containers)
 
 
-def _entropy_indicators(result: ParseResult, rhetoric=None, chunking=None) -> list[str]:
+def _entropy_indicators(result: ParseResult, rhetoric=None, chunking=None, suppressed: set[str] | None = None) -> list[str]:
+    suppressed = suppressed or set()
     indicators = []
     if result.instruction_count > 3:
         indicators.append(f"{result.instruction_count} instructions in one prompt")
-    if not result.verbs:
+    if not result.verbs and "no action verb detected" not in suppressed:
         indicators.append("no action verb detected")
     if len(result.unqualified_refs) > 0:
         indicators.append(f"unqualified references: {', '.join(result.unqualified_refs[:3])}")
@@ -79,11 +81,15 @@ def _entropy_indicators(result: ParseResult, rhetoric=None, chunking=None) -> li
 
     # Rhetoric indicators
     if rhetoric:
-        indicators.extend(rhetoric.rhetoric_indicators)
+        for ri in rhetoric.rhetoric_indicators:
+            if ri not in suppressed:
+                indicators.append(ri)
 
     # Chunking indicators
     if chunking:
-        indicators.extend(chunking.clause_indicators)
+        for ci in chunking.clause_indicators:
+            if ci not in suppressed:
+                indicators.append(ci)
 
     return indicators
 

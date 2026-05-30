@@ -12,7 +12,32 @@ on:
       - "**/*.txt"
 
 jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Install test dependencies
+        run: pip install pytest
+
+      - name: Run tests
+        run: pytest tests/ -q
+
   gate:
+    needs: [test]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,11 +50,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install ambiguity
-        run: |
-          pip install -e .
+        run: pip install -e .
 
       - name: Find changed prompt files
         id: changed
+        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             FILES=$(git diff --name-only --diff-filter=ACM "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -iE '\.md$|\.txt$' || true)
@@ -41,6 +66,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Run ambiguity gate on changed files
+        shell: bash
         run: |
           FAILED=0
           while IFS= read -r file; do
