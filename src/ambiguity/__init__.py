@@ -11,6 +11,7 @@ from .hooks import AnthropicHook, OpenaiHook, HookConfig
 from .bridges import as_udl_envelope, as_minimal_envelope
 from .review import review, render_review_report
 from .extensions import get_registry, BaseExtension, MaxWordCountExtension, ExtensionResult
+from .technical import assess, TechnicalAssessment, render_technical_report, render_technical_json
 
 __all__ = [
     "Analysis",
@@ -31,6 +32,10 @@ __all__ = [
     "BaseExtension",
     "MaxWordCountExtension",
     "ExtensionResult",
+    "assess",
+    "TechnicalAssessment",
+    "render_technical_report",
+    "render_technical_json",
 ]
 
 __version__ = "0.1.0"

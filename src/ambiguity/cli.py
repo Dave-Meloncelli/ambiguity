@@ -14,6 +14,7 @@ from .clarify import clarify, render_clarify_report, render_clarify_json
 from .memory import log_interaction, summary as memory_summary
 from .import_discover import discover, render_import_report, render_import_json
 from .review import review, render_review_report, render_review_json
+from .technical import assess, render_technical_report, render_technical_json
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -92,6 +93,11 @@ def build_parser() -> argparse.ArgumentParser:
     review_p.add_argument("--response", required=True, help="LLM response text to analyze")
     review_p.add_argument("--json", action="store_true", help="Output as JSON")
 
+    technical_p = sub.add_parser("technical", help="Technical direction pipeline — ambiguity → FRAM → challenge → probe")
+    technical_p.add_argument("prompt", nargs="?", help="Prompt text to assess")
+    technical_p.add_argument("--pipe", action="store_true", help="Read prompt from stdin")
+    technical_p.add_argument("--json", action="store_true", help="Output as JSON")
+
     return parser
 
 
@@ -123,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_flow_test(args)
     elif args.command == "review":
         return _cmd_review(args)
+    elif args.command == "technical":
+        return _cmd_technical(args)
 
     parser.print_help()
     return 0
@@ -385,6 +393,22 @@ def _cmd_review(args) -> int:
     else:
         print(render_review_report(result))
     return 1 if any(i.severity == "error" for i in result.issues) else 0
+
+
+def _cmd_technical(args) -> int:
+    prompt = args.prompt
+    if args.pipe or not prompt:
+        prompt = sys.stdin.read().strip()
+    if not prompt:
+        print("error: no prompt provided", file=sys.stderr)
+        return 1
+    result = assess(prompt)
+    if args.json:
+        print(json.dumps(render_technical_json(result), indent=2))
+    else:
+        print(render_technical_report(result))
+    red_flag_count = len(result.red_flags)
+    return 1 if red_flag_count > 0 else 0
 
 
 if __name__ == "__main__":
