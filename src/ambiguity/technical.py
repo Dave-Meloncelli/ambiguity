@@ -15,6 +15,9 @@ TECH_DOMAIN_KEYWORDS: dict[str, dict[str, str]] = {
     "redis": {"domain": "data", "entity": "redis"},
     "postgres": {"domain": "data", "entity": "postgres"},
     "mongodb": {"domain": "data", "entity": "mongodb"},
+    "csv": {"domain": "data", "entity": "csv"},
+    "elasticsearch": {"domain": "data", "entity": "elasticsearch"},
+    "meilisearch": {"domain": "data", "entity": "meilisearch"},
     "kafka": {"domain": "infrastructure", "entity": "message_queue"},
     "queue": {"domain": "infrastructure", "entity": "message_queue"},
     "api": {"domain": "architecture", "entity": "api"},
@@ -164,29 +167,52 @@ def assess(prompt: str) -> TechnicalAssessment:
 
     text_lower = prompt.lower()
 
+    # Normalize hyphens to spaces for pattern matching
+    text_normalized = text_lower.replace("-", " ")
+
     # Extract technical entities from keyword hits + direct scanning
+    def _resolve_keyword(kw: str) -> tuple[str, dict[str, str]] | None:
+        if kw in TECH_DOMAIN_KEYWORDS:
+            return kw, TECH_DOMAIN_KEYWORDS[kw]
+        if kw.endswith("s") and len(kw) > 3:
+            singular = kw[:-1]
+            if singular in TECH_DOMAIN_KEYWORDS:
+                return singular, TECH_DOMAIN_KEYWORDS[singular]
+        return None
+
     found_entities: dict[str, TechnicalEntity] = {}
     for kw in result.keywords:
-        if kw in TECH_DOMAIN_KEYWORDS:
-            info = TECH_DOMAIN_KEYWORDS[kw]
-            if kw not in found_entities:
-                found_entities[kw] = TechnicalEntity(
-                    name=kw, domain=info["domain"], entity_type=info["entity"],
+        resolved = _resolve_keyword(kw)
+        if resolved is not None:
+            entity_key, info = resolved
+            if entity_key not in found_entities:
+                found_entities[entity_key] = TechnicalEntity(
+                    name=entity_key, domain=info["domain"], entity_type=info["entity"],
                 )
-    for word in text_lower.split():
+    for word in text_normalized.split():
         word_clean = word.strip(".,;:!?")
+        # Try exact match first
         if word_clean in TECH_DOMAIN_KEYWORDS and word_clean not in found_entities:
             info = TECH_DOMAIN_KEYWORDS[word_clean]
             found_entities[word_clean] = TechnicalEntity(
                 name=word_clean, domain=info["domain"], entity_type=info["entity"],
             )
+            continue
+        # Try singular form for common plurals
+        if word_clean.endswith("s") and len(word_clean) > 3:
+            singular = word_clean[:-1]
+            if singular in TECH_DOMAIN_KEYWORDS and singular not in found_entities:
+                info = TECH_DOMAIN_KEYWORDS[singular]
+                found_entities[singular] = TechnicalEntity(
+                    name=singular, domain=info["domain"], entity_type=info["entity"],
+                )
     entities = list(found_entities.values())
 
-    # Overengineering signal detection
-    overengineering = [s for s in OVERENGINEERING_SIGNALS if s in text_lower]
+    # Overengineering signal detection (use hyphen-normalized text)
+    overengineering = [s for s in OVERENGINEERING_SIGNALS if s in text_normalized]
 
-    # Reinvention pattern detection
-    reinvention = [p for p in REINVENTION_PATTERNS if p["pattern"] in text_lower]
+    # Reinvention pattern detection (use hyphen-normalized text)
+    reinvention = [p for p in REINVENTION_PATTERNS if p["pattern"] in text_normalized]
 
     # Red flag: vague technical context
     if not entities and score.total > 5.0:
@@ -296,6 +322,176 @@ def render_technical_json(assessment: TechnicalAssessment) -> dict[str, Any]:
     return assessment.handoff_package()
 
 
+# Self-test corpus — known prompts with expected detection outcomes
+SELF_TEST_CASES: list[dict[str, Any]] = [
+    {
+        "prompt": "build a distributed enterprise-grade microservice platform with event-driven architecture",
+        "expect_entities": ["microservice"],
+        "expect_overengineering": ["enterprise", "distributed", "microservice", "platform"],
+        "expect_reinvention": [],
+        "expect_red_flags": True,
+    },
+    {
+        "prompt": "we need a workflow engine for our data pipeline",
+        "expect_entities": [],
+        "expect_overengineering": [],
+        "expect_reinvention": ["workflow engine"],
+        "expect_red_flags": True,
+    },
+    {
+        "prompt": "implement merge sort on a linked list in python without recursion",
+        "expect_entities": ["python"],
+        "expect_overengineering": [],
+        "expect_reinvention": [],
+        "expect_red_flags": False,
+    },
+    {
+        "prompt": "add a real-time notification system with websockets",
+        "expect_entities": [],
+        "expect_overengineering": ["real time"],
+        "expect_reinvention": [],
+        "expect_red_flags": True,
+    },
+    {
+        "prompt": "build an event-driven fault-tolerant self-healing platform",
+        "expect_entities": [],
+        "expect_overengineering": ["event driven", "fault tolerant", "self healing", "platform"],
+        "expect_reinvention": [],
+        "expect_red_flags": True,
+    },
+    {
+        "prompt": "write a python script that reads a csv file and sums a column",
+        "expect_entities": ["python", "csv"],
+        "expect_overengineering": [],
+        "expect_reinvention": [],
+        "expect_red_flags": True,  # constraints missing — correct advisory
+    },
+    {
+        "prompt": "deploy microservices with kubernetes and postgres",
+        "expect_entities": ["microservice", "kubernetes", "postgres"],
+        "expect_overengineering": ["microservice"],
+        "expect_reinvention": [],
+        "expect_red_flags": True,
+    },
+]
+
+
+@dataclass
+class SelfTestResult:
+    prompt: str
+    entities_found: list[str]
+    entities_missed: list[str]
+    overengineering_found: list[str]
+    overengineering_missed: list[str]
+    reinvention_found: list[dict[str, str]]
+    reinvention_missed: list[dict[str, str]]
+    red_flag_expected: bool
+    red_flag_actual: bool
+    maturity_actual: str
+    pass_: bool
+
+
+def self_test() -> list[SelfTestResult]:
+    results: list[SelfTestResult] = []
+    for case in SELF_TEST_CASES:
+        a = assess(case["prompt"])
+        entity_names = [e.name for e in a.technical_entities]
+        over_found = list(a.overengineering_signals)
+        rein_found = list(a.reinvention_signals)
+        red_flag_actual = len(a.red_flags) > 0
+
+        entities_missed = [e for e in case["expect_entities"] if e not in entity_names]
+        over_missed = [s for s in case["expect_overengineering"] if s not in over_found]
+        rein_patterns_missed = [
+            p for p in case["expect_reinvention"]
+            if p not in [r["pattern"] for r in rein_found]
+        ]
+        expected_rein_entries = [
+            {"pattern": p, "existing": next(
+                (r["existing"] for r in REINVENTION_PATTERNS if r["pattern"] == p), ""
+            )}
+            for p in case["expect_reinvention"]
+        ]
+
+        passed = (
+            len(entities_missed) == 0
+            and len(over_missed) == 0
+            and len(rein_patterns_missed) == 0
+            and red_flag_actual == case["expect_red_flags"]
+        )
+
+        results.append(SelfTestResult(
+            prompt=case["prompt"],
+            entities_found=entity_names,
+            entities_missed=entities_missed,
+            overengineering_found=over_found,
+            overengineering_missed=over_missed,
+            reinvention_found=rein_found,
+            reinvention_missed=expected_rein_entries if rein_patterns_missed else [],
+            red_flag_expected=case["expect_red_flags"],
+            red_flag_actual=red_flag_actual,
+            maturity_actual=a.maturity_signal,
+            pass_=passed,
+        ))
+    return results
+
+
+def render_self_test(results: list[SelfTestResult], prev_results: list[SelfTestResult] | None = None) -> str:
+    lines: list[str] = []
+    sep = "=" * 62
+    lines.append(sep)
+    lines.append("  ambiguity technical — self-test")
+    if prev_results:
+        lines.append("  (delta mode: current vs previous run)")
+    lines.append(sep)
+    lines.append("")
+
+    total = len(results)
+
+    for i, r in enumerate(results):
+        status = "PASS" if r.pass_ else "FAIL"
+        lines.append(f"  [{status}] [{i+1}/{total}] {r.prompt[:55]}")
+        if not r.pass_:
+            if r.entities_missed:
+                lines.append(f"         entities missed: {', '.join(r.entities_missed)}")
+            if r.overengineering_missed:
+                lines.append(f"         overengineering missed: {', '.join(r.overengineering_missed)}")
+            if r.reinvention_missed:
+                for rm in r.reinvention_missed:
+                    lines.append(f"         reinvention missed: {rm['pattern']} -> {rm['existing']}")
+            if r.red_flag_expected != r.red_flag_actual:
+                lines.append(f"         red flag expected={r.red_flag_expected} actual={r.red_flag_actual}")
+
+        # Delta indicator (handle growing/ shrinking test suites)
+        if prev_results:
+            if i < len(prev_results):
+                prev = prev_results[i]
+                if prev.pass_ and not r.pass_:
+                    lines.append("         <<< REGRESSION from previous run")
+                elif not prev.pass_ and r.pass_:
+                    lines.append("         >>> NEW PASS from previous run")
+            else:
+                lines.append("         [new test case]")
+
+    lines.append("")
+    lines.append(sep)
+    count_pass = sum(1 for r in results if r.pass_)
+    pct = count_pass / total * 100 if total > 0 else 0
+    lines.append(f"  {count_pass}/{total} passed ({pct:.0f}%)")
+    if prev_results:
+        prev_pass = sum(1 for r in prev_results if r.pass_)
+        delta = count_pass - prev_pass
+        new_cases = total - len(prev_results)
+        if new_cases != 0:
+            lines.append(f"  ({new_cases:+d} test case{'s' if abs(new_cases) != 1 else ''} from baseline)")
+        if delta != 0:
+            lines.append(f"  Delta: {delta:+d} passing from baseline")
+        else:
+            lines.append("  No change in passing count from baseline")
+    lines.append(sep)
+    return "\n".join(lines)
+
+
 __all__ = [
     "assess",
     "TechnicalAssessment",
@@ -305,4 +501,8 @@ __all__ = [
     "TECH_DOMAIN_KEYWORDS",
     "OVERENGINEERING_SIGNALS",
     "REINVENTION_PATTERNS",
+    "self_test",
+    "SelfTestResult",
+    "render_self_test",
+    "SELF_TEST_CASES",
 ]

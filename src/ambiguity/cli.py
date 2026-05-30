@@ -14,7 +14,7 @@ from .clarify import clarify, render_clarify_report, render_clarify_json
 from .memory import log_interaction, summary as memory_summary
 from .import_discover import discover, render_import_report, render_import_json
 from .review import review, render_review_report, render_review_json
-from .technical import assess, render_technical_report, render_technical_json
+from .technical import assess, render_technical_report, render_technical_json, self_test, render_self_test, SelfTestResult
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -97,6 +97,8 @@ def build_parser() -> argparse.ArgumentParser:
     technical_p.add_argument("prompt", nargs="?", help="Prompt text to assess")
     technical_p.add_argument("--pipe", action="store_true", help="Read prompt from stdin")
     technical_p.add_argument("--json", action="store_true", help="Output as JSON")
+    technical_p.add_argument("--self-test", action="store_true", help="Run self-test suite against known test cases")
+    technical_p.add_argument("--save-baseline", action="store_true", help="Save current test results as baseline for delta comparison")
 
     return parser
 
@@ -396,6 +398,24 @@ def _cmd_review(args) -> int:
 
 
 def _cmd_technical(args) -> int:
+    if args.self_test:
+        import os
+        _baseline_path = os.path.expanduser("~/.ambiguity/technical_baseline.json")
+        prev_results = None
+        if os.path.isfile(_baseline_path):
+            try:
+                with open(_baseline_path, encoding="utf-8") as _fh:
+                    raw = json.load(_fh)
+                prev_results = [SelfTestResult(**r) for r in raw]
+            except Exception:
+                prev_results = None
+        results = self_test()
+        if args.save_baseline:
+            os.makedirs(os.path.dirname(_baseline_path), exist_ok=True)
+            with open(_baseline_path, "w", encoding="utf-8") as _fh:
+                json.dump([r.__dict__ for r in results], _fh, indent=2)
+        print(render_self_test(results, prev_results))
+        return 0 if all(r.pass_ for r in results) else 1
     prompt = args.prompt
     if args.pipe or not prompt:
         prompt = sys.stdin.read().strip()
