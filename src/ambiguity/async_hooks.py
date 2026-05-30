@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 from .analyzer import Analysis
 from .hooks import HookConfig, _extract_prompt_text, _handle_result, _log_hook_call

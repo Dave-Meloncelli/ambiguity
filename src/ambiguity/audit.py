@@ -1,6 +1,5 @@
 """Audit claimed file creations against actual filesystem state."""
 
-import json
 import os
 import re
 import sys

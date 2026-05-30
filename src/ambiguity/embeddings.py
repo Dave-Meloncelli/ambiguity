@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass, field
-from typing import Any
 
 _HAS_SENTENCE_TRANSFORMERS = False
 _model = None
@@ -36,9 +36,6 @@ _LOAD_ATTEMPTED = False
 _LOAD_LOCK = __import__("threading").Lock()
 
 
-import os
-
-
 def _load_model(timeout: float = 15.0) -> bool:
     global _MODEL_INSTANCE, _MODEL_NAME, _DIMENSION, _LOAD_ATTEMPTED
     if _MODEL_INSTANCE is not None:
@@ -53,7 +50,6 @@ def _load_model(timeout: float = 15.0) -> bool:
         return False
 
     import concurrent.futures
-    import threading
 
     _LOAD_LOCK.acquire()
     if _MODEL_INSTANCE is not None:

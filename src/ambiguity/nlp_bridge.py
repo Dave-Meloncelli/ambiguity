@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
-from typing import Any
 
 # Try importing spaCy; everything below is guarded
 _HAS_SPACY = False
@@ -175,7 +173,7 @@ def render_nlp_report(result: NlpResult) -> str:
     if not result.has_spacy:
         lines.append(sep)
         lines.append("  NLP bridge: spaCy not available (falling back to regex)")
-        lines.append(f"  Install: pip install spacy && python -m spacy download en_core_web_sm")
+        lines.append("  Install: pip install spacy && python -m spacy download en_core_web_sm")
         lines.append(sep)
         return "\n".join(lines)
 

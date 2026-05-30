@@ -3,9 +3,7 @@
 from .parser import ParseResult
 from .containers import (
     containers_for_verb,
-    specificity_band,
     containers_for_keyword,
-    collisions_for_keyword,
 )
 
 

@@ -2,7 +2,6 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
 
 # Multi-word phrasal verbs — verb + particle combinations
 PHRASAL_VERBS: dict[str, list[str]] = {
@@ -155,7 +154,6 @@ class ChunkResult:
 
 def _split_clauses(text: str) -> list[str]:
     """Split text into clauses using boundary markers."""
-    lower = text.lower()
     # First split on sentence boundaries
     clauses = re.split(r'[.!?]+', text)
     result = []

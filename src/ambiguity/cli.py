@@ -354,7 +354,6 @@ def _cmd_log(args) -> int:
         print("error: no prompt provided", file=sys.stderr)
         return 1
 
-    from .memory import log_interaction
     from .translate import translate as do_translate
 
     changes = None

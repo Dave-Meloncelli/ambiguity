@@ -85,7 +85,6 @@ def detect_duplicate_paragraphs(md_files: list[Path]) -> list[FlowIssue]:
         if h in _INTENTIONAL_DUPLICATE_HASHES:
             continue
         if len(sources) > 1:
-            short = sources[0].replace(str(REPO_ROOT), "")
             issues.append(FlowIssue(
                 severity="info",
                 category="duplicate",

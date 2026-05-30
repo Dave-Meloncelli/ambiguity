@@ -107,7 +107,6 @@ def _find_phrases_dict(text: str, phrases: dict[str, float]) -> dict[str, float]
 
 
 def _check_constraint_compliance(prompt_constraints: list[str], response: str) -> dict[str, bool]:
-    lower = response.lower()
     compliance: dict[str, bool] = {}
     for constraint in prompt_constraints:
         if constraint == "negation":

@@ -2,8 +2,6 @@
 
 import json
 import os
-import subprocess
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,18 +33,18 @@ def build_enriched_prompt(prompt: str) -> str:
     verbs = analysis.result.verbs
     constraints = analysis.result.constraints
 
-    parts = [f"## Ambiguity Pre-Flight Analysis\n"]
+    parts = ["## Ambiguity Pre-Flight Analysis\n"]
     parts.append(f"Score: {score:.1f}/10 ({band})")
     if adv:
         parts.append(f"Advisory: {adv}")
     if indicators:
-        parts.append(f"\nIssues to address:\n" + "\n".join(f"- {i}" for i in indicators))
+        parts.append("\nIssues to address:\n" + "\n".join(f"- {i}" for i in indicators))
     if verbs:
         parts.append(f"\nDetected verbs: {', '.join(verbs)}")
     if constraints:
         parts.append(f"Constraints: {', '.join(constraints)}")
     parts.append(f"\n---\n\n## Original Request\n\n{prompt}")
-    parts.append(f"\n\n## Response Requirements\n")
+    parts.append("\n\n## Response Requirements\n")
     parts.append("Please address all issues flagged above in your response.")
     return "\n".join(parts)
 

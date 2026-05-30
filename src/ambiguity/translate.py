@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .analyzer import Analysis
-from .containers import KNOWN_ACRONYMS, VERB_TAXONOMY, specificity_band
+from .containers import VERB_TAXONOMY
 
 
 @dataclass

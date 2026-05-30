@@ -2,7 +2,6 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import Any
 
 # Figures of speech / idioms → intent mapping
 # Each entry: (regex, intent_tag, description)
@@ -172,7 +171,6 @@ METAPHOR_SOURCE_DOMAINS: dict[str, str] = {
     "burn": "finance",
     # Container/ship metaphors
     "flag": "nautical",
-    "anchor": "nautical",
     "navigate": "nautical",
     "course": "nautical",
     "helm": "nautical",

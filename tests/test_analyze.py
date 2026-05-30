@@ -1,6 +1,5 @@
 import json
 from ambiguity.parser import parse
-from ambiguity.scoring import AmbiguityScore
 from ambiguity.analyzer import Analysis
 
 
@@ -279,7 +278,6 @@ def test_clarify_clean_prompt_no_questions():
 
 
 def test_log_writes_and_reads(tmp_path):
-    from ambiguity.memory import _find_memory
     import os
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
@@ -307,7 +305,6 @@ def test_import_rejects_no_consent():
 
 def test_import_scans_json(tmp_path):
     from ambiguity.import_discover import discover
-    import os
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     (fake_home / ".claude" / "logs").mkdir(parents=True)
@@ -375,7 +372,7 @@ def test_chunking_detects_contradictions():
 
 
 def test_stemming_matches_inflected_forms():
-    from ambiguity.containers import fuzzy_verb_match, STEMMING_TABLE
+    from ambiguity.containers import fuzzy_verb_match
     for inflected, base in [
         ("writes", "write"), ("wrote", "write"), ("written", "write"), ("writing", "write"),
         ("creates", "create"), ("created", "create"), ("creating", "create"),
@@ -505,8 +502,6 @@ def test_review_detects_constraint_breach():
     from ambiguity.review import review
     r = review("write a function without imports", "here is a function using import os")
     assert r.constraint_compliance
-    # negations shouldn't be ignored
-    has_compliance = len(r.constraint_compliance) > 0
 
 
 def test_review_json_roundtrip():

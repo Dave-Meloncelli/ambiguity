@@ -33,7 +33,7 @@ ambiguity analyze --pipe --json < prompt.txt
 
 ```
 src/ambiguity/
-├── __init__.py       # version
+├── __init__.py       # version + public API exports
 ├── __main__.py       # python -m ambiguity
 ├── cli.py            # CLI entry point (analyze, learn, dismiss, config)
 ├── analyzer.py       # orchestration
@@ -45,12 +45,23 @@ src/ambiguity/
 ├── profile.py        # self-learning profile (history, dismissals, calibration)
 ├── report.py         # terminal + JSON output
 ├── bridges.py        # UDL envelope wrapper (Federation)
-├── hooks.py          # LLM client wrappers (auto-analyze before send)
+├── hooks.py          # LLM client wrappers (sync: Anthropic, OpenAI)
+├── async_hooks.py    # Async + provider hook wrappers (AsyncAnthropic, AsyncOpenAI, Google, Ollama, Azure)
 ├── rhetoric.py       # idiom, hedging, metaphor, framing detection
 ├── chunking.py       # clause splitting, phrasal verbs, contradictions
 ├── constraints.py    # CDL typed constraint taxonomy (7 types × 3 categories)
 ├── embeddings.py     # optional semantic gap detection (sentence-transformers)
+├── extensions.py     # plugin system (BaseExtension, ExtensionRegistry, MaxWordCount)
+├── server.py         # FastAPI HTTP API server
 ├── flow.py           # Documentation flow-test (duplication, coverage auditing)
+├── review.py         # Post-flight response analysis
+├── compare.py        # A/B experiment runner
+├── audit.py          # File creation audit
+├── translate.py      # Prompt de-ambiguation
+├── clarify.py        # Clarification question generator
+├── memory.py         # Interaction logging
+├── import_discover.py # Harness prompt import scanner
+├── nlp_bridge.py     # spaCy integration (fallback to regex)
 ```
 
 ## Pipeline data flow
@@ -108,6 +119,11 @@ The engine can be preloaded as a middleware layer that auto-analyzes prompts:
 |------|-----|-------------|
 | `AnthropicHook` | `from ambiguity.hooks import AnthropicHook` | Wraps Anthropic client, scores every prompt before send |
 | `OpenaiHook` | `from ambiguity.hooks import OpenaiHook` | Wraps OpenAI client, same behavior |
+| `AsyncAnthropicHook` | `from ambiguity.async_hooks import AsyncAnthropicHook` | Async version wrapping `anthropic.AsyncAnthropic` |
+| `AsyncOpenaiHook` | `from ambiguity.async_hooks import AsyncOpenaiHook` | Async version wrapping `openai.AsyncOpenAI` |
+| `GoogleHook` | `from ambiguity.async_hooks import GoogleHook` | Wraps `google.genai` (Gemini) |
+| `OllamaHook` | `from ambiguity.async_hooks import OllamaHook` | Local LLM via Ollama API |
+| `AzureOpenaiHook` | `from ambiguity.async_hooks import AzureOpenaiHook` | Wraps `openai.AzureOpenAI` |
 | `--watch <dir>` | `ambiguity analyze --watch docs/` | Monitors directory, analyzes new/changed `.md` files live |
 | Git pre-commit | installed at `.githooks/pre-commit` | Blocks commit if `.md` files score > 6.0 |
 | Pipe mode | `echo "prompt" \| ambiguity analyze --pipe` | Any-pipeline integration |
@@ -162,7 +178,6 @@ The `compare` command:
 
 ## Roadmap (not yet implemented)
 
-- `ambiguity review <response>` — post-flight response analysis
 - `ambiguity chunk <prompt>` — multi-instruction splitting
 - `ambiguity spell <text>` — surface-level corrections
 

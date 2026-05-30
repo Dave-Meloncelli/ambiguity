@@ -1,7 +1,6 @@
 """Project-level memory — logs prompt interactions to docs/memory.md."""
 
 import hashlib
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any

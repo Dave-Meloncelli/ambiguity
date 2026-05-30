@@ -1,7 +1,7 @@
 """FastAPI HTTP server wrapping the ambiguity analysis engine."""
 
 try:
-    from fastapi import FastAPI, Request
+    from fastapi import FastAPI
     from fastapi.responses import JSONResponse, RedirectResponse
     from fastapi.middleware.cors import CORSMiddleware
     from pydantic import BaseModel
