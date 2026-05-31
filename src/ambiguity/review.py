@@ -278,7 +278,8 @@ def render_review_report(r: ReviewResult) -> str:
         "",
     ]
     if not r.issues:
-        lines.append("  No issues detected.", sep)
+        lines.append("  No issues detected.")
+        lines.append(sep)
         return "\n".join(lines)
 
     severity_symbol = {"error": "[X]", "warning": "[!]", "info": "[i]"}
